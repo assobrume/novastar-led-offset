@@ -12,7 +12,7 @@ d'écrans LED NovaStar.
 ## Fonctions
 
 - saisie des zones en millimètres, pixels ou bandes LED ;
-- bandes de 20 cm et 25 cm mélangeables et plaçables à gauche ou à droite ;
+- bandes de 20 cm et 25 cm mélangeables, avec placement gauche, droite ou personnalisé autour des bandes centrales ;
 - conversion par pitch, calcul des vides et des offsets ;
 - affectation d'un port RJ45 et du sens d'entrée pour chaque écran ;
 - chaînage de plusieurs écrans sur un même port ;
