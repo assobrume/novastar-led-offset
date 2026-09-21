@@ -1,0 +1,23 @@
+{
+  "name": "NovaStar LED Offset Bêta",
+  "short_name": "LED Bêta",
+  "id": "./beta-app",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "description": "Version bêta du calculateur NovaStar avec boîtiers de contrôle haut et bas.",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
