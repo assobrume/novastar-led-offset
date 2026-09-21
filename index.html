@@ -752,18 +752,20 @@ function renderDiagramLegacy(){
   const title=document.getElementById('diagramTitle').value.trim()||'Écran LED transparent';
   const horizontal=c.axis==='X';
   const viewW=1200, left=100, top=170, drawW=1000, drawH=360, legendRowH=70;
-  const legendY=(horizontal?top+260:top+drawH)+55;
+  const legendY=top+drawH+55;
   const viewH=legendY+c.zones.length*legendRowH+70;
-  const scale=(horizontal?drawW:drawH)/Math.max(1,c.logical);
+  const scale=Math.min(drawW/Math.max(1,c.screenWidth),drawH/Math.max(1,c.screenHeight));
+  const originX=left+(drawW-c.screenWidth*scale)/2;
+  const originY=top+(drawH-c.screenHeight*scale)/2;
   const portColors=['#22c55e','#f97316','#a855f7','#eab308','#ec4899','#14b8a6','#ef4444','#3b82f6','#84cc16','#f59e0b'];
   const colorForPort=port=>portColors[(port-1)%portColors.length];
   let shapes='',labels='',routes='',connectors='',details='';
   const usedPorts=new Set(),lastOnPort={};
   c.zones.forEach((z,idx)=>{
-    const x=horizontal?left+z.start*scale:left+260;
-    const y=horizontal?top:top+z.start*scale;
-    const w=horizontal?z.pixels*scale:480;
-    const h=horizontal?260*z.totalHeight/Math.max(1,c.screenHeight):z.pixels*scale;
+    const x=horizontal?originX+z.start*scale:originX;
+    const y=horizontal?originY:originY+z.start*scale;
+    const w=horizontal?z.pixels*scale:z.bandWidthPx*scale;
+    const h=horizontal?z.totalHeight*scale:z.pixels*scale;
     shapes+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#153a5b" stroke="#38bdf8" stroke-width="3"/>`;
     let bandOffset=0;
     for(let b=1;b<z.bands;b++){
@@ -793,19 +795,20 @@ function renderDiagramLegacy(){
       routes+=`<circle cx="${entryX}" cy="${routeY}" r="12" fill="${color}" stroke="#fff" stroke-width="3"/>`;
       lastOnPort[port]={x:exitX,y:routeY};
     };
+    const cableInset=Math.min(22,Math.max(6,h*.12));
     if(z.dualControl){
-      drawCable(z.port,z.entrySide,y+22,y+52,'HAUT ↓');
-      drawCable(z.portBottom,z.entrySideBottom,y+h-22,y+h-42,'BAS ↑');
+      drawCable(z.port,z.entrySide,y+cableInset,y+52,'HAUT ↓');
+      drawCable(z.portBottom,z.entrySideBottom,y+h-cableInset,y+h-42,'BAS ↑');
     }else if(z.controlLayout==='single-bottom'){
-      drawCable(z.port,z.entrySide,y+h-22,y+h-48,'BAS ↑');
+      drawCable(z.port,z.entrySide,y+h-cableInset,y+h-48,'BAS ↑');
     }else{
-      drawCable(z.port,z.entrySide,y+22,y+h-22,'HAUT ↓');
+      drawCable(z.port,z.entrySide,y+cableInset,y+h-22,'HAUT ↓');
     }
     if(z.gapPx>0){
-      const gx=horizontal?x+w:left+260;
-      const gy=horizontal?top:y+h;
-      const gw=horizontal?z.gapPx*scale:480;
-      const gh=horizontal?260:z.gapPx*scale;
+      const gx=horizontal?x+w:originX;
+      const gy=horizontal?originY:y+h;
+      const gw=horizontal?z.gapPx*scale:c.screenWidth*scale;
+      const gh=horizontal?c.screenHeight*scale:z.gapPx*scale;
       shapes+=`<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="#334155" opacity=".75"/>`;
       labels+=`<text x="${gx+gw/2}" y="${gy+gh/2}" text-anchor="middle" fill="#fbbf24" font-size="17" transform="${horizontal?`rotate(-90 ${gx+gw/2} ${gy+gh/2})`:''}">VIDE ${z.gapPx}px</text>`;
     }
