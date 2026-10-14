@@ -32,6 +32,12 @@
     details.card[open]>summary{border-bottom:1px solid #3a3a3c}
     .collapsible-content{padding:0 15px 15px}
     .capacity-card .collapsible-content{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px}
+    #novalctTable{overflow:visible}
+    .novalct-compact{width:100%;table-layout:fixed;border-collapse:collapse;margin-top:9px;background:#111113;font-size:.78rem}
+    .novalct-compact th,.novalct-compact td{padding:4px 2px;border:1px solid #48484a;text-align:center;white-space:nowrap}
+    .novalct-compact th{background:#343438;color:#f3f4f6;font-size:.68rem}
+    .novalct-compact .screen-separator td{padding:4px 6px;background:#262628;color:#93c5fd;text-align:left;font-weight:800;white-space:normal}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
     label{display:block;font-size:.88rem;color:#d1d5db;margin-bottom:5px}
     input,select,button{
@@ -41,28 +47,67 @@
     input:disabled{opacity:.55;cursor:not-allowed}
     button{background:#2563eb;border:none;font-weight:700;cursor:pointer;margin-top:11px}
     button.secondary{background:#2563eb}
-    .remove{background:#2563eb;margin:4px 0 0;grid-column:1/-1}
-    .duplicate{background:#2563eb;margin:4px 0 0;grid-column:1/-1}
-    .row3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px;align-items:end;padding:14px;background:#262628;border:1px solid #48484a;border-radius:13px}
-    .row3>div:first-child{grid-column:1/-1}
-    .row3 .drag-handle+div{grid-column:1/-1}
-    .drag-handle{grid-column:1/-1;background:#3f3f46;border:1px dashed #71717a;border-radius:10px;padding:11px;text-align:center;font-weight:700;color:#e5e7eb;cursor:grab;touch-action:none;user-select:none}
+    button:disabled{opacity:.45;cursor:not-allowed}
+    button:focus-visible,summary:focus-visible,.drag-handle:focus-visible{outline:2px solid #93c5fd;outline-offset:3px}
+    .row3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px;align-items:end;padding:12px;background:#262628;border:1px solid #48484a;border-radius:13px;min-width:0}
+    .row3 .screen-name-field{grid-column:1/-1}
+    .zone-header{grid-column:1/-1;display:flex;align-items:center;gap:6px;min-width:0}
+    .zone-toggle{display:flex;align-items:center;gap:7px;flex:1;min-width:0;min-height:44px;background:#343438;margin:0;padding:9px 8px;text-align:left;font-size:.9rem}
+    .zone-name{overflow-wrap:anywhere}
+    .zone-chevron{width:16px;height:16px;flex:none;transform:rotate(180deg)}
+    .row3.collapsed .zone-chevron{transform:none}
+    .zone-actions{display:flex;gap:6px;flex:none}
+    .zone-actions button{width:44px;height:44px;padding:10px;margin:0;border-radius:9px;background:#2563eb}
+    .zone-actions svg{display:block;width:22px;height:22px;pointer-events:none}
+    .profuse-mode .zone-actions>.duplicate,.profuse-mode .zone-actions>.remove{display:none}
+    body.profuse-mode .profuse-only{display:block}
+    .zone-dialog{width:min(420px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;margin:auto;padding:20px;border:1px solid #48484a;border-radius:15px;background:#1c1c1e;color:#f9fafb}
+    .zone-dialog::backdrop{background:rgba(0,0,0,.75)}
+    .zone-dialog h2{font-size:1.15rem;margin:0 0 12px;overflow-wrap:anywhere}
+    .zone-dialog button{min-height:44px}
+    .zone-dialog .cancel{background:#3f3f46}
+    .split-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+    .split-presets button{margin:0;padding:10px}
+    .split-presets button[aria-pressed="true"]{outline:2px solid #93c5fd;outline-offset:2px}
+    #splitPreview{min-height:3em;color:#d1d5db}
+    #splitPreview.has-error{color:#fbbf24}
+    .row3.collapsed{padding:8px}
+    .row3.collapsed>:not(.zone-header){display:none!important}
+    .drag-handle{display:none;align-items:center;flex:1;min-width:0;min-height:44px;border:1px dashed #60a5fa;border-radius:10px;padding:9px 8px;text-align:left;font-size:.9rem;font-weight:700;background:#343438;color:#e5e7eb;cursor:grab;touch-action:none;user-select:none;overflow-wrap:anywhere}
     .drag-handle:active{cursor:grabbing}
     .row3.dragging{opacity:.7;border-color:#60a5fa;box-shadow:0 0 0 2px #2563eb}
-    #reorderBtn{background:#2563eb;margin-bottom:2px}
-    #zones.reorder-mode .row3{display:block;padding:8px;margin-bottom:8px;min-height:0}
-    #zones.reorder-mode .row3>*{display:none!important}
-    #zones.reorder-mode .row3>.drag-handle{display:block!important;padding:15px;text-align:left;background:#343438;border-color:#60a5fa}
+    .zones-toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;position:sticky;top:8px;z-index:2;background:#1c1c1e;padding:8px 0;margin-top:8px}
+    .zones-toolbar button{min-height:44px;font-size:.85rem;margin:0;padding:10px 8px}
+    #foldZonesBtn{background:#3f3f46}
+    .zone-count{display:inline-block;margin-left:5px;padding:2px 7px;border-radius:12px;background:#343438;color:#d1d5db;font-size:.78rem}
+    #zones.reorder-mode .row3{padding:8px;margin-bottom:8px}
+    #zones.reorder-mode .row3>:not(.zone-header){display:none!important}
+    #zones.reorder-mode .zone-toggle{display:none}
+    #zones.reorder-mode .drag-handle{display:flex}
+    .layout-changing,.layout-changing *{overflow-anchor:none!important}
+    #calculationStatus.has-error{color:#fbbf24}
+    details.card>summary{scroll-margin-top:12px}
+    details.card>summary::after{flex:none}
+    .collapsible-content{padding-top:12px;min-width:0}
+    .summary-table{overflow-x:auto}
     .bands-extra{display:none}
     .bands-mode .bands-extra{display:block}
     .bands-mode .row3[data-band-order="custom"] .band25-total{display:none}
     .bands-mode .row3:not([data-band-order="custom"]) .band-custom{display:none}
+    .profuse-only{display:none}
+    .profuse-mode .novastar-only{display:none!important}
     .dual-extra{display:none}
     .row3[data-control-layout="dual"] .dual-extra{display:block}
     .beta-badge{display:inline-block;margin-left:7px;padding:3px 7px;border-radius:999px;background:#f59e0b;color:#111827;font-size:.72rem;vertical-align:middle}
     .hint{color:#9ca3af;font-size:.86rem;margin-top:8px;line-height:1.45}
+    .profuse-group-result{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;margin-top:8px;padding:10px;border:1px solid #48484a;border-radius:9px;background:#242427;font-size:.86rem}
+    .profuse-group-result span{overflow-wrap:anywhere}
+    .profuse-group-name{display:block;flex:1 1 180px;margin:0;font-weight:700}
+    .group-color-key{display:inline-block;width:13px;height:13px;border-radius:3px;margin-right:8px;vertical-align:middle}
+    .profuse-group-name input{display:block;width:100%;min-width:0;margin-top:4px;font-weight:600}
+    .zone-size-alert{margin-top:7px;padding:8px 10px;border:1px solid #fbbf24;border-radius:8px;background:#3a2b10;color:#fde68a;font-size:.83rem;line-height:1.4}
+    .zone-size-alert:empty{display:none!important}
     .big{font-size:1.35rem;font-weight:800;margin:4px 0 9px}
-    .pill{display:inline-block;padding:5px 8px;border:1px solid #48484a;border-radius:999px;margin:3px;background:#0b0b0c;font-size:.86rem}
     .converted{color:#93c5fd;font-size:.82rem;margin-top:5px;min-height:1.1em}
     table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.92rem}
     th,td{padding:8px 5px;border-bottom:1px solid #374151;text-align:left}
@@ -78,13 +123,19 @@
     .diagram-wrap svg{display:block;width:100%;height:auto;min-height:280px}
     .button-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
     #installBtn{display:none;background:#059669}
+    .sending-field{display:none}
+    body.multi-sending .sending-field{display:block}
+    .checkline{display:flex;align-items:center;gap:10px;padding-top:25px}
+    .checkline input{width:auto;margin:0;accent-color:#2563eb}
     @media(max-width:620px){
       .grid{grid-template-columns:1fr}
       .card{padding:13px}
       .row3{grid-template-columns:1fr;padding:13px;gap:11px}
       .row3>div,.bands-extra{grid-column:1/-1}
-      .remove{grid-column:1/-1}
       .button-grid{grid-template-columns:1fr}
+      .novalct-compact{font-size:.68rem}
+      .novalct-compact th,.novalct-compact td{padding:3px 1px}
+      .novalct-compact th{font-size:.59rem}
     }
   </style>
 </head>
@@ -95,8 +146,14 @@
 
   <button id="installBtn">Installer l’application</button>
 
-  <div class="card">
+  <details class="card" id="settingsPanel" data-panel open>
+    <summary>Réglages de l’installation</summary>
+    <div class="collapsible-content">
     <div class="grid">
+      <div>
+        <label>Utilisation</label>
+        <select id="appMode"><option value="complete">Mode complet NovaStar</option><option value="profuse">Mode rapide Profuse</option></select>
+      </div>
       <div>
         <label>Pitch LED (mm)</label>
         <input id="pitch" type="text" value="3,9" inputmode="decimal" autocomplete="off">
@@ -116,53 +173,94 @@
           <option value="bands">Nombre de bandes LED</option>
         </select>
       </div>
+      <div class="profuse-only">
+        <label id="profuseCrossLabel">Hauteur par défaut des zones (px)</label>
+        <input id="profuseCrossAxis" type="text" value="454" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="novastar-only checkline">
+        <input id="multiSending" type="checkbox">
+        <label for="multiSending" style="margin:0">Installation avec plusieurs contrôleurs</label>
+      </div>
     </div>
-  </div>
+    </div>
+  </details>
 
-  <div class="card">
-    <strong>Zones LED</strong>
+  <details class="card" id="zonesPanel" data-panel open>
+    <summary><span>Zones LED <span class="zone-count" id="zoneCount">1</span></span></summary>
+    <div class="collapsible-content">
     <div class="hint" id="zoneHint">Mesure chaque partie LED, puis indique la largeur du montant situé après.</div>
-    <div class="hint"><strong>Ordre du schéma : vue de face de l’écran.</strong> Passe en mode réorganisation pour déplacer facilement les écrans de gauche à droite.</div>
-    <div id="zones" style="margin-top:11px"></div>
-    <button id="reorderBtn" type="button" onclick="toggleReorderMode()">↕ Réorganiser les écrans</button>
+    <div class="hint" id="orderHint"><strong>Ordre du schéma : vue de face de l’écran.</strong> Passe en mode réorganisation pour déplacer facilement les écrans de gauche à droite.</div>
+    <div id="profuseGroupAlerts" class="hint profuse-only" role="status"></div>
+    <div id="zonesToolbarAnchor"></div>
+    <div class="zones-toolbar" id="zonesToolbar">
+      <button id="reorderBtn" type="button" onclick="toggleReorderMode()" aria-pressed="false">↕ Réorganiser</button>
+      <button id="foldZonesBtn" type="button" onclick="toggleAllZones()">Tout replier</button>
+      <button id="undoBtn" type="button" onclick="undoConfiguration()" disabled title="Annuler la dernière modification (Ctrl+Z)">↶ Annuler</button>
+      <button id="redoBtn" type="button" onclick="redoConfiguration()" disabled title="Rétablir (Ctrl+Maj+Z)">↷ Rétablir</button>
+    </div>
+    <div id="zones" style="margin-top:8px"></div>
     <button class="secondary" onclick="addZone()">+ Ajouter une zone</button>
-    <button onclick="calculate()">Calculer</button>
-  </div>
+    <div id="calculationStatus" class="hint" role="status">Calculs mis à jour automatiquement.</div>
+    </div>
+  </details>
 
-  <div class="card">
-    <div id="summary">Renseigne les valeurs puis calcule.</div>
-    <div id="table"></div>
-  </div>
+  <details class="card" id="resultsPanel" data-panel open>
+    <summary>Résultats et décalages</summary>
+    <div class="collapsible-content">
+      <div id="summary">Renseigne les valeurs : le calcul est automatique.</div>
+      <div id="table" class="summary-table"></div>
+    </div>
+  </details>
 
-  <div class="card">
-    <strong>Schéma Complex Screen</strong>
-    <div class="hint">Le schéma reprend automatiquement les zones, les vides et les Start X/Y calculés.</div>
+  <details class="card novastar-only" id="novalctPanel" data-panel open>
+    <summary>Tableau de saisie NovaLCT</summary>
+    <div class="collapsible-content">
+      <div class="hint">Une bande LED correspond à une Receiving Card. La numérotation recommence à 1 pour chaque couple Sending Card / Port et suit le sens d’arrivée RJ45.</div>
+      <div id="novalctTable" class="table-scroll"></div>
+      <div class="hint"><strong>Export NovaLCT .scr expérimental.</strong> Indique la résolution du média envoyé par le contrôleur ; ouvre le fichier dans NovaLCT avec « Load from File » et vérifie le câblage et les coordonnées avant « Send to HW ».</div>
+      <div class="grid"><label>Source X (px)<input id="scrSourceWidth" type="number" min="1" max="65535" value="1920" oninput="scheduleDraftSave()"></label><label>Source Y (px)<input id="scrSourceHeight" type="number" min="1" max="65535" value="1080" oninput="scheduleDraftSave()"></label></div>
+      <button type="button" onclick="exportNovaScr()">Télécharger .scr (expérimental)</button>
+      <div class="hint" id="scrExportStatus" role="status"></div>
+    </div>
+  </details>
+
+  <details class="card" id="diagramPanel" data-panel open>
+    <summary><span id="diagramHeading">Schéma Complex Screen</span></summary>
+    <div class="collapsible-content">
+    <div class="hint" id="diagramHint">Le schéma reprend automatiquement les zones, les vides et les Start X/Y calculés.</div>
     <div class="grid" style="margin-top:11px">
       <div>
         <label>Titre du schéma</label>
         <input id="diagramTitle" type="text" value="Écran LED transparent" autocomplete="off">
       </div>
       <div>
+        <label>Vue utilisée lors de la saisie</label>
+        <select id="viewSide"><option value="front">Vue de face</option><option value="rear">Saisie vue arrière</option></select>
+        <button id="orientationConvertBtn" type="button" class="secondary" style="margin-top:8px" onclick="toggleOrientationConversion()">Convertir en vue arrière</button>
+      </div>
+      <div class="novastar-only">
         <label>Résolution X — bande 20 cm (px)</label>
         <input id="bandWidth" type="text" value="50" inputmode="numeric" autocomplete="off">
       </div>
-      <div>
+      <div class="novastar-only">
         <label>Résolution X — bande 25 cm (px)</label>
         <input id="bandWidth25" type="text" value="64" inputmode="numeric" autocomplete="off">
       </div>
-      <div>
+      <div class="novastar-only">
         <label>Résolution d’une bande — Y (px)</label>
         <input id="bandHeight" type="text" value="454" inputmode="numeric" autocomplete="off">
       </div>
     </div>
+    <div class="hint" id="viewSideHint">Choisis d’abord la vue depuis laquelle tu as relevé les écrans. Le bouton effectue ensuite la conversion miroir complète.</div>
     <div id="diagram" class="diagram-wrap"></div>
     <div class="button-grid">
       <button class="secondary" onclick="exportDiagram('svg')">Télécharger le schéma SVG</button>
       <button onclick="exportDiagram('png')">Télécharger le schéma PNG</button>
     </div>
-  </div>
+    </div>
+  </details>
 
-  <details class="card" open>
+  <details class="card" id="savedPanel" data-panel open>
     <summary>Configurations enregistrées</summary>
     <div class="collapsible-content">
       <div class="hint">Les configurations bêta restent sur cet appareil et sont séparées de la version stable. Utilise l’export JSON pour les sauvegarder.</div>
@@ -182,15 +280,15 @@
     </div>
   </details>
 
-  <div class="card">
-    <strong>Formule</strong>
-    <div class="hint">
+  <details class="card" id="formulaPanel" data-panel>
+    <summary>Formule</summary>
+    <div class="collapsible-content hint">
       Pixels du vide = largeur du montant (mm) ÷ pitch (mm).<br>
       Start suivant = Start actuel + résolution LED + pixels du vide.
     </div>
-  </div>
+  </details>
 
-  <details class="card capacity-card">
+  <details class="card capacity-card novastar-only" id="capacityPanel" data-panel>
     <summary>Rappel — capacité maximale NovaStar</summary>
     <div class="collapsible-content">
     <div class="capacity-title">Série MCTRL</div>
@@ -233,6 +331,30 @@
   </details>
 </div>
 
+<dialog id="zoneActionsDialog" class="zone-dialog" aria-labelledby="zoneActionsTitle">
+  <h2 id="zoneActionsTitle">Actions de la zone</h2>
+  <div id="zoneActionChoices">
+    <button type="button" id="divideZoneBtn" onclick="showZoneSplit()">Diviser…</button>
+    <button type="button" onclick="runZoneDialogAction('duplicate')">Dupliquer</button>
+    <button type="button" id="deleteZoneAction" onclick="runZoneDialogAction('remove')">Supprimer…</button>
+  </div>
+  <form id="splitZoneForm" hidden>
+    <p class="hint" id="splitAxisHint"></p>
+    <label for="splitCount">Nombre de zones</label>
+    <input id="splitCount" type="number" min="2" max="100" step="1" value="2" inputmode="numeric" required>
+    <div class="split-presets" aria-label="Divisions rapides">
+      <button type="button" data-count="2">2</button>
+      <button type="button" data-count="3">3</button>
+      <button type="button" data-count="4">4</button>
+      <button type="button" data-count="5">5</button>
+    </div>
+    <p id="splitPreview" class="hint" role="status"></p>
+    <p class="hint">Chaque zone reste modifiable : dimensions, nom et vide après. Aucun vide n’est ajouté entre les morceaux ; le vide existant est conservé après le dernier.</p>
+    <button id="confirmSplitBtn" type="submit">Diviser</button>
+  </form>
+  <button type="button" class="cancel" onclick="closeZoneActions()">Annuler</button>
+</dialog>
+
 <script>
 const APP_VARIANT='beta';
 const CONFIG_STORAGE_KEY='novastar-offset-beta-configs-v1';
@@ -240,6 +362,106 @@ const DRAFT_STORAGE_KEY='novastar-offset-beta-draft-v1';
 let loadingConfiguration=false;
 let appReady=false;
 let draftTimer=null;
+const HISTORY_LIMIT=40;
+let undoHistory=[],redoHistory=[],historyTimer=null,historyRestoring=false;
+function historySnapshot(){
+  const data=collectConfiguration();
+  delete data.panelStates;
+  return JSON.stringify(data);
+}
+function updateHistoryButtons(){
+  const current=historySnapshot();
+  document.getElementById('undoBtn').disabled=undoHistory.length===0||
+    (undoHistory.length===1&&undoHistory[0]===current);
+  document.getElementById('redoBtn').disabled=redoHistory.length===0;
+}
+function recordHistoryChange(){
+  if(historyRestoring||!undoHistory.length)return;
+  clearTimeout(historyTimer);
+  const current=historySnapshot();
+  if(current===undoHistory.at(-1)){updateHistoryButtons();return}
+  historyTimer=setTimeout(()=>{
+    const next=historySnapshot();
+    if(next!==undoHistory.at(-1)){
+      undoHistory.push(next);
+      if(undoHistory.length>HISTORY_LIMIT)undoHistory.shift();
+      redoHistory=[];
+    }
+    updateHistoryButtons();
+  },450);
+  updateHistoryButtons();
+}
+function restoreHistory(snapshot){
+  clearTimeout(historyTimer);
+  historyRestoring=true;
+  try{applyConfiguration(JSON.parse(snapshot),true)}
+  finally{historyRestoring=false}
+  scheduleDraftSave();
+  updateHistoryButtons();
+}
+function undoConfiguration(){
+  if(!undoHistory.length)return;
+  clearTimeout(historyTimer);
+  const current=historySnapshot(),latest=undoHistory.at(-1);
+  if(current!==latest){redoHistory.push(current);restoreHistory(latest);return}
+  if(undoHistory.length<2)return;
+  redoHistory.push(undoHistory.pop());
+  restoreHistory(undoHistory.at(-1));
+}
+function redoConfiguration(){
+  if(!redoHistory.length)return;
+  clearTimeout(historyTimer);
+  const current=historySnapshot(),latest=undoHistory.at(-1);
+  if(current!==latest){undoHistory.push(current);redoHistory=[];updateHistoryButtons();return}
+  const next=redoHistory.pop();
+  undoHistory.push(next);
+  if(undoHistory.length>HISTORY_LIMIT)undoHistory.shift();
+  restoreHistory(next);
+}
+document.addEventListener('keydown',event=>{
+  if(!(event.ctrlKey||event.metaKey)||event.altKey||event.key.toLowerCase()!=='z')return;
+  const target=event.target;
+  if(target instanceof HTMLElement&&(target.isContentEditable||target.matches('input:not([type="checkbox"]):not([type="radio"]),textarea')))return;
+  event.preventDefault();
+  if(event.shiftKey)redoConfiguration();else undoConfiguration();
+});
+let scrollLayoutVersion=0;
+function keepScrollPosition(anchor,change,targetTop=null){
+  if(!appReady||!anchor||!anchor.isConnected){change();return}
+  const top=targetTop??anchor.getBoundingClientRect().top;
+  const version=++scrollLayoutVersion;
+  document.documentElement.classList.add('layout-changing');
+  const restore=()=>{
+    if(anchor.isConnected)window.scrollBy(0,anchor.getBoundingClientRect().top-top);
+  };
+  try{change();restore()}finally{
+    requestAnimationFrame(()=>{
+      if(version!==scrollLayoutVersion)return;
+      restore();
+      document.documentElement.classList.remove('layout-changing');
+    });
+  }
+}
+function zoneHeaderMarkup(){
+  return `<div class="zone-header">
+    <button class="zone-toggle" type="button" onclick="toggleZoneDetails(this)" aria-expanded="true">
+      <svg class="zone-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      <span class="zone-name"></span>
+    </button>
+    <div class="drag-handle" role="button" tabindex="0" title="Maintenir et déplacer ; au clavier : flèches haut et bas"></div>
+    <div class="zone-actions">
+      <button class="zone-menu-button profuse-only" type="button" onclick="openZoneActions(this)" title="Actions de la zone" aria-label="Actions de la zone" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      </button>
+      <button class="duplicate" type="button" onclick="duplicateZone(this)" title="Dupliquer" aria-label="Dupliquer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V4a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h4"/></svg>
+      </button>
+      <button class="remove" type="button" onclick="removeZone(this)" title="Supprimer" aria-label="Supprimer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
 function controlValue(row,selector,fallback=''){
   const control=row.querySelector(selector);
   return control?control.value:fallback;
@@ -248,12 +470,17 @@ function serializeZone(row){
   const gap=row.querySelector('.gapmm');
   return {
     screenName:controlValue(row,'.screenName'),
+    groupId:row.dataset.groupId||'',groupName:row.dataset.groupName||'',
+    groupTargetAxis:row.dataset.groupTargetAxis||'',groupTargetCross:row.dataset.groupTargetCross||'',
     zonevalue:controlValue(row,'.zonevalue'),
+    profuseCross:controlValue(row,'.profuseZoneCross'),
     zonevalue25:controlValue(row,'.zonevalue25','0'),
     band25Left:controlValue(row,'.band25Left','0'),
     band25Right:controlValue(row,'.band25Right','0'),
     bandOrder:controlValue(row,'.bandOrder','20-25'),
+    collapsed:row.classList.contains('collapsed'),
     gapmm:gap.disabled?(gap.dataset.savedGap??gap.value):gap.value,
+    sendingCard:controlValue(row,'.sendingCard','1'),
     rj45Port:controlValue(row,'.rj45Port','1'),
     entrySide:controlValue(row,'.entrySide','left'),
     controlLayout:controlValue(row,'.controlLayout','single-top'),
@@ -268,10 +495,15 @@ function setControlValue(row,selector,value){
   if(control&&value!==undefined&&value!==null)control.value=String(value);
 }
 function applyZoneData(row,data){
+  row.dataset.groupId=data.groupId||'';
+  row.dataset.groupName=data.groupName||'';
+  row.dataset.groupTargetAxis=data.groupTargetAxis||'';
+  row.dataset.groupTargetCross=data.groupTargetCross||'';
   const mapping={
     '.screenName':'screenName','.zonevalue':'zonevalue','.zonevalue25':'zonevalue25',
+    '.profuseZoneCross':'profuseCross',
     '.band25Left':'band25Left','.band25Right':'band25Right',
-    '.bandOrder':'bandOrder','.rj45Port':'rj45Port','.entrySide':'entrySide',
+    '.bandOrder':'bandOrder','.sendingCard':'sendingCard','.rj45Port':'rj45Port','.entrySide':'entrySide',
     '.controlLayout':'controlLayout','.heightTop':'heightTop','.heightBottom':'heightBottom',
     '.rj45PortBottom':'rj45PortBottom','.entrySideBottom':'entrySideBottom'
   };
@@ -289,15 +521,22 @@ function applyZoneData(row,data){
   gap.dataset.savedGap=gap.value;
   if(row.querySelector('.controlLayout'))updateControlLayout(row);
   updateBandPlacement(row);
+  setZoneCollapsed(row,Boolean(data.collapsed));
   updateDragHandle(row);
 }
 function collectConfiguration(){
   return {
     schemaVersion:1,variant:APP_VARIANT,configName:document.getElementById('configName').value.trim(),
+    appMode:document.getElementById('appMode').value,multiSending:document.getElementById('multiSending').checked,
     pitch:document.getElementById('pitch').value,axis:document.getElementById('axis').value,
     inputMode:document.getElementById('inputMode').value,diagramTitle:document.getElementById('diagramTitle').value,
+    viewSide:document.getElementById('viewSide').value,
+    orientationTransformsData:true,
+    profuseCrossAxis:document.getElementById('profuseCrossAxis').value,
     bandWidth:document.getElementById('bandWidth').value,bandWidth25:document.getElementById('bandWidth25').value,
     bandHeight:document.getElementById('bandHeight').value,
+    scrSourceWidth:document.getElementById('scrSourceWidth').value,scrSourceHeight:document.getElementById('scrSourceHeight').value,
+    panelStates:Object.fromEntries([...document.querySelectorAll('details[data-panel]')].map(panel=>[panel.id,panel.open])),
     zones:[...document.querySelectorAll('.row3')].map(serializeZone)
   };
 }
@@ -309,13 +548,20 @@ function applyConfiguration(data,silent=false){
     if(!silent)alert('Cette configuration appartient à une autre version de l’application.');return false;
   }
   loadingConfiguration=true;
+  toggleReorderMode(false);
   document.getElementById('pitch').value=data.pitch??'3,9';
+  document.getElementById('appMode').value=data.appMode??'complete';
+  document.getElementById('multiSending').checked=data.multiSending??data.zones.some(zone=>Number(zone.sendingCard)>1);
   document.getElementById('axis').value=data.axis??'X';
   document.getElementById('inputMode').value=data.inputMode??'mm';
   document.getElementById('diagramTitle').value=data.diagramTitle??'Écran LED transparent';
+  document.getElementById('viewSide').value=data.orientationTransformsData?(data.viewSide??'front'):'front';
+  document.getElementById('profuseCrossAxis').value=data.profuseCrossAxis??data.bandHeight??'454';
   document.getElementById('bandWidth').value=data.bandWidth??'50';
   document.getElementById('bandWidth25').value=data.bandWidth25??'64';
   document.getElementById('bandHeight').value=data.bandHeight??'454';
+  document.getElementById('scrSourceWidth').value=data.scrSourceWidth??'1920';
+  document.getElementById('scrSourceHeight').value=data.scrSourceHeight??'1080';
   document.getElementById('configName').value=data.configName??'';
   document.getElementById('zones').innerHTML='';
   data.zones.forEach(zoneData=>{
@@ -325,21 +571,139 @@ function applyConfiguration(data,silent=false){
   loadingConfiguration=false;
   previousMode=document.getElementById('inputMode').value;
   updateMode();
+  updateAppMode();
+  updateMultiSendingMode(false);
   renumber();
   calculate();
+  if(data.panelStates&&typeof data.panelStates==='object'){
+    document.querySelectorAll('details[data-panel]').forEach(panel=>{
+      if(typeof data.panelStates[panel.id]==='boolean')panel.open=data.panelStates[panel.id];
+    });
+  }
   return true;
 }
 function duplicateZone(button){
   const source=button.closest('.row3');
   const data=serializeZone(source);
-  data.screenName=((data.screenName||'Écran')+' — copie').slice(0,40);
-  loadingConfiguration=true;
-  addZone(data.zonevalue||500);
-  const copy=document.querySelector('.row3:last-child');
-  applyZoneData(copy,data);
-  source.parentElement.insertBefore(copy,source.nextElementSibling);
-  loadingConfiguration=false;
-  renumber();calculate();
+  data.screenName=(data.screenName||'Écran').slice(0,32)+' — copie';
+  data.groupId='';data.groupName='';data.groupTargetAxis='';data.groupTargetCross='';
+  keepScrollPosition(source.querySelector('.zone-header'),()=>{
+    loadingConfiguration=true;
+    try{
+      addZone(data.zonevalue||500);
+      const copy=document.querySelector('.row3:last-child');
+      applyZoneData(copy,data);
+      source.parentElement.insertBefore(copy,source.nextElementSibling);
+    }finally{loadingConfiguration=false}
+    renumber();calculate();
+  });
+}
+let zoneActionTarget=null;
+function openZoneActions(button){
+  if(document.getElementById('appMode').value!=='profuse')return;
+  zoneActionTarget=button.closest('.row3');
+  document.getElementById('zoneActionsTitle').textContent=controlValue(zoneActionTarget,'.screenName')||'Zone';
+  document.getElementById('zoneActionChoices').hidden=false;
+  document.getElementById('splitZoneForm').hidden=true;
+  document.getElementById('deleteZoneAction').disabled=document.querySelectorAll('.row3').length<=1;
+  document.getElementById('zoneActionsDialog').showModal();
+}
+function closeZoneActions(){
+  document.getElementById('zoneActionsDialog').close();
+}
+function runZoneDialogAction(action){
+  const row=zoneActionTarget;
+  closeZoneActions();
+  if(!row?.isConnected)return;
+  if(action==='duplicate')duplicateZone(row.querySelector('.duplicate'));
+  if(action==='remove')removeZone(row.querySelector('.remove'));
+}
+function getZoneSplitPlan(){
+  const rows=[...document.querySelectorAll('.row3')];
+  const index=rows.indexOf(zoneActionTarget);
+  const source=lastCalculation?.zones[index];
+  const count=parseNumber(document.getElementById('splitCount').value);
+  if(document.getElementById('appMode').value!=='profuse'||index<0||!source){
+    return {error:'Corrige les dimensions et les vides avant de diviser cette zone.'};
+  }
+  const max=Math.min(100,source.pixels);
+  if(max<2)return {error:'Cette zone doit contenir au moins 2 pixels pour être divisée.'};
+  if(!Number.isInteger(count)||count<2||count>max){
+    return {error:`Choisis un nombre entier de 2 à ${max} : chaque zone doit garder au moins 1 pixel.`};
+  }
+  const base=Math.floor(source.pixels/count),remainder=source.pixels%count;
+  const pixels=Array.from({length:count},(_,i)=>base+(i<remainder?1:0));
+  // In millimetres, distribute the measured length in the same proportions.
+  // Keep enough precision to retain both the measurement and the pixel total.
+  const measured=document.getElementById('inputMode').value==='mm';
+  const original=parseNumber(controlValue(zoneActionTarget,'.zonevalue'));
+  let remaining=original;
+  const values=pixels.map((size,i)=>{
+    if(!measured)return String(size);
+    const part=i===count-1?remaining:original*size/source.pixels;
+    const value=Number(part.toPrecision(12));
+    remaining-=value;
+    return String(value).replace('.',',');
+  });
+  return {index,count,pixels,values,source};
+}
+function showZoneSplit(){
+  calculate();
+  document.getElementById('zoneActionChoices').hidden=true;
+  document.getElementById('splitZoneForm').hidden=false;
+  document.getElementById('zoneActionsTitle').textContent=`Diviser « ${controlValue(zoneActionTarget,'.screenName')} »`;
+  document.getElementById('splitCount').value='2';
+  document.getElementById('splitAxisHint').textContent=lastCalculation?.axis==='Y'
+    ? 'Découpage vertical (axe Y), de haut en bas.'
+    : 'Découpage horizontal (axe X), de gauche à droite.';
+  updateSplitPreview();
+  document.querySelector('.split-presets button').focus({preventScroll:true});
+}
+function updateSplitPreview(){
+  const plan=getZoneSplitPlan();
+  const preview=document.getElementById('splitPreview');
+  preview.classList.toggle('has-error',Boolean(plan.error));
+  document.getElementById('confirmSplitBtn').disabled=Boolean(plan.error);
+  document.querySelectorAll('.split-presets button').forEach(button=>{
+    button.setAttribute('aria-pressed',String(Number(button.dataset.count)===Number(document.getElementById('splitCount').value)));
+  });
+  if(plan.error){preview.textContent=plan.error;return}
+  const sizes=[...new Set(plan.pixels)].map(size=>{
+    const n=plan.pixels.filter(p=>p===size).length;
+    return `${n} zone${n>1?'s':''} de ${size} px`;
+  }).join(' + ');
+  preview.textContent=`${sizes}. Total conservé : ${plan.source.pixels} px. Noms : Zone ${plan.index+1} à Zone ${plan.index+plan.count}.`;
+}
+function splitSelectedZone(event){
+  event.preventDefault();
+  calculate();
+  const plan=getZoneSplitPlan();
+  if(plan.error){updateSplitPreview();return}
+  const source=zoneActionTarget;
+  const data=serializeZone(source);
+  const groupId=data.groupId||'profuse-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+  const groupName=data.groupName||'Groupe '+(new Set([...document.querySelectorAll('.row3')].map(row=>row.dataset.groupId).filter(Boolean)).size+1);
+  const groupTargetAxis=data.groupTargetAxis||String(plan.source.pixels);
+  const groupTargetCross=data.groupTargetCross||String(plan.source.crossPixels);
+  closeZoneActions();
+  keepScrollPosition(source.querySelector('.zone-header'),()=>{
+    loadingConfiguration=true;
+    try{
+      let previous=source;
+      plan.values.forEach((value,i)=>{
+        let row=source;
+        if(i>0){
+          addZone();
+          row=document.querySelector('.row3:last-child');
+          previous.after(row);
+        }
+        applyZoneData(row,{...data,groupId,groupName,groupTargetAxis,groupTargetCross,screenName:`Zone ${plan.index+i+1}`,zonevalue:value,gapmm:i===plan.count-1?data.gapmm:'0'});
+        previous=row;
+      });
+    }finally{loadingConfiguration=false}
+    renumber();calculate();
+    source.querySelector('.zone-toggle').focus({preventScroll:true});
+  });
 }
 function readSavedConfigurations(){
   try{return JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)||'{}')}catch{return {}}
@@ -402,6 +766,7 @@ function importConfigurationFile(file){
 }
 function scheduleDraftSave(){
   if(!appReady||loadingConfiguration)return;
+  recordHistoryChange();
   clearTimeout(draftTimer);
   draftTimer=setTimeout(()=>{try{localStorage.setItem(DRAFT_STORAGE_KEY,JSON.stringify(collectConfiguration()))}catch{}},300);
 }
@@ -410,13 +775,14 @@ function restoreDraft(){
 }
 function addZone(value,gapBefore=80){
   const existing=[...document.querySelectorAll('.row3')];
+  const profuseMode=document.getElementById('appMode').value==='profuse';
   if(existing.length&&!loadingConfiguration){
     const previousGap=existing.at(-1).querySelector('.gapmm');
     previousGap.value=formatInput(gapBefore);
     previousGap.dataset.savedGap=previousGap.value;
   }
   const number=existing.length+1;
-  const usedNameNumbers=existing.map(r=>r.querySelector('.screenName')?.value.trim().match(/^Écran (\d+)$/)).filter(Boolean).map(m=>Number(m[1]));
+  const usedNameNumbers=existing.map(r=>r.querySelector('.screenName')?.value.trim().match(/^(?:Écran|Zone) (\d+)$/)).filter(Boolean).map(m=>Number(m[1]));
   const defaultNameNumber=Math.max(0,...usedNameNumbers)+1;
   const currentMode=document.getElementById('inputMode').value;
   const defaultTotalHeight=Math.max(2,Math.round(parseNumber(document.getElementById('bandHeight').value)||454));
@@ -427,25 +793,27 @@ function addZone(value,gapBefore=80){
   const d=document.createElement('div');
   d.className='row3';
   d.innerHTML=`
-    <div class="drag-handle" title="Maintenir puis déplacer">↕ Maintenir et déplacer cet écran</div>
-    <div><label>Nom de l’écran</label><input class="screenName" type="text" value="Écran ${defaultNameNumber}" maxlength="40" autocomplete="off"></div>
-    <div><label class="zoneLabel">Zone ${number} — ${currentUnit}</label><input class="zonevalue" type="text" value="${formatInput(value)}" inputmode="decimal" autocomplete="off"><div class="converted"></div></div>
-    <div class="bands-extra band25-total"><label>Bandes de 25 cm</label><input class="zonevalue25" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
-    <div class="bands-extra"><label>Placement des bandes</label><select class="bandOrder"><option value="20-25">20 cm à gauche • 25 cm à droite</option><option value="25-20">25 cm à gauche • 20 cm à droite</option><option value="custom">Personnalisé • 20 cm au milieu</option></select></div>
-    <div class="bands-extra band-custom"><label>Bandes de 25 cm à gauche</label><input class="band25Left" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
-    <div class="bands-extra band-custom"><label>Bandes de 25 cm à droite</label><input class="band25Right" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
-    <div><label>Configuration des boîtiers</label><select class="controlLayout"><option value="single-top">Boîtier unique en haut</option><option value="single-bottom">Boîtier unique en bas</option><option value="dual">Boîtiers en haut + en bas</option></select></div>
-    <div class="dual-extra"><label>Résolution Y — partie haute (px)</label><input class="heightTop" type="text" value="${defaultTopHeight}" inputmode="numeric" autocomplete="off"></div>
-    <div class="dual-extra"><label>Résolution Y — partie basse (px)</label><input class="heightBottom" type="text" value="${defaultBottomHeight}" inputmode="numeric" autocomplete="off"></div>
-    <div class="dual-extra"><div class="converted dualTotal">Hauteur totale : ${defaultTotalHeight} px</div></div>
+    ${zoneHeaderMarkup()}
+    <div class="screen-name-field"><label class="screenNameLabel">${profuseMode?'Nom de la zone':'Nom de l’écran'}</label><input class="screenName" type="text" value="${profuseMode?'Zone':'Écran'} ${defaultNameNumber}" maxlength="40" autocomplete="off"></div>
+    <div><label class="zoneLabel">Zone ${number} — ${currentUnit}</label><input class="zonevalue" type="text" value="${formatInput(value)}" inputmode="decimal" autocomplete="off"><div class="converted"></div><div class="zone-size-alert profuse-only" role="status"></div></div>
+    <div class="profuse-only"><label class="profuseZoneCrossLabel">Hauteur de cette zone (px)</label><input class="profuseZoneCross" type="text" inputmode="numeric" autocomplete="off"><div class="hint">Facultatif : vide = dimension par défaut.</div></div>
+    <div class="bands-extra band25-total novastar-only"><label>Bandes de 25 cm</label><input class="zonevalue25" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
+    <div class="bands-extra novastar-only"><label>Placement des bandes</label><select class="bandOrder"><option value="20-25">20 cm à gauche • 25 cm à droite</option><option value="25-20">25 cm à gauche • 20 cm à droite</option><option value="custom">Personnalisé • 20 cm au milieu</option></select></div>
+    <div class="bands-extra band-custom novastar-only"><label>Bandes de 25 cm à gauche</label><input class="band25Left" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
+    <div class="bands-extra band-custom novastar-only"><label>Bandes de 25 cm à droite</label><input class="band25Right" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
+    <div class="novastar-only"><label>Configuration des boîtiers</label><select class="controlLayout"><option value="single-top">Boîtier unique en haut</option><option value="single-bottom">Boîtier unique en bas</option><option value="dual">Boîtiers en haut + en bas</option></select></div>
+    <div class="dual-extra novastar-only"><label>Résolution Y — partie haute (px)</label><input class="heightTop" type="text" value="${defaultTopHeight}" inputmode="numeric" autocomplete="off"></div>
+    <div class="dual-extra novastar-only"><label>Résolution Y — partie basse (px)</label><input class="heightBottom" type="text" value="${defaultBottomHeight}" inputmode="numeric" autocomplete="off"></div>
+    <div class="dual-extra novastar-only"><div class="converted dualTotal">Hauteur totale : ${defaultTotalHeight} px</div></div>
     <div><label class="gapLabel">Vide après (mm)</label><input class="gapmm" type="text" value="0" inputmode="decimal" autocomplete="off"></div>
-    <div><label class="primaryPortLabel">Port RJ45 NovaStar</label><select class="rj45Port">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(number,20)?'selected':''}>Port ${i+1}</option>`).join('')}</select></div>
-    <div><label class="primaryEntryLabel">Sens d’entrée RJ45</label><select class="entrySide"><option value="left">Arrivée à gauche →</option><option value="right">← Arrivée à droite</option></select></div>
-    <div class="dual-extra"><label>Port RJ45 — boîtier bas</label><select class="rj45PortBottom">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(number+1,20)?'selected':''}>Port ${i+1}</option>`).join('')}</select></div>
-    <div class="dual-extra"><label>Sens d’entrée — boîtier bas</label><select class="entrySideBottom"><option value="left">Arrivée à gauche →</option><option value="right">← Arrivée à droite</option></select></div>
-    <button class="duplicate" type="button" onclick="duplicateZone(this)">Dupliquer cet écran</button>
-    <button class="remove" type="button" onclick="removeZone(this)">Supprimer</button>`;
+    <div class="novastar-only sending-field"><label>Contrôleur / Sending Card</label><input class="sendingCard" type="text" value="1" inputmode="numeric" autocomplete="off"></div>
+    <div class="novastar-only"><label class="primaryPortLabel">Port RJ45 NovaStar</label><select class="rj45Port">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(number,20)?'selected':''}>Port ${i+1}</option>`).join('')}</select></div>
+    <div class="novastar-only"><label class="primaryEntryLabel">Sens d’entrée RJ45</label><select class="entrySide"><option value="left">Arrivée à gauche →</option><option value="right">← Arrivée à droite</option></select></div>
+    <div class="dual-extra novastar-only"><label>Port RJ45 — boîtier bas</label><select class="rj45PortBottom">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(number+1,20)?'selected':''}>Port ${i+1}</option>`).join('')}</select></div>
+    <div class="dual-extra novastar-only"><label>Sens d’entrée — boîtier bas</label><select class="entrySideBottom"><option value="left">Arrivée à gauche →</option><option value="right">← Arrivée à droite</option></select></div>
+    `;
   document.getElementById('zones').appendChild(d);
+  updateProfuseDimensionLabels();
   updateBandPlacement(d);
   updateControlLayout(d);
   initZoneDrag(d);
@@ -454,7 +822,15 @@ function addZone(value,gapBefore=80){
 }
 function removeZone(b){
   if(document.querySelectorAll('.row3').length<=1)return;
-  b.closest('.row3').remove(); renumber(); calculate();
+  const row=b.closest('.row3');
+  const name=row.querySelector('.screenName').value.trim()||'cette zone';
+  if(!confirm(`Supprimer « ${name} » et ses paramètres ?\nCette action ne peut pas être annulée.`))return;
+  const neighbour=row.nextElementSibling||row.previousElementSibling;
+  keepScrollPosition(neighbour?.querySelector('.zone-header'),()=>{
+    row.remove();renumber();calculate();
+    const focusSelector=document.getElementById('zones').classList.contains('reorder-mode')?'.drag-handle':'.zone-toggle';
+    neighbour?.querySelector(focusSelector)?.focus({preventScroll:true});
+  });
 }
 function updateControlLayout(row){
   const layout=row.querySelector('.controlLayout').value;
@@ -463,19 +839,125 @@ function updateControlLayout(row){
   row.querySelector('.primaryPortLabel').textContent=dual?'Port RJ45 — boîtier haut':'Port RJ45 NovaStar';
   row.querySelector('.primaryEntryLabel').textContent=dual?'Sens d’entrée — boîtier haut':'Sens d’entrée RJ45';
 }
+function setZoneCollapsed(row,collapsed){
+  row.classList.toggle('collapsed',collapsed);
+  const button=row.querySelector('.zone-toggle');
+  if(button)button.setAttribute('aria-expanded',String(!collapsed));
+  updateDragHandle(row);
+}
+function toggleZoneDetails(button){
+  const row=button.closest('.row3');
+  keepScrollPosition(row.querySelector('.zone-header'),()=>{
+    setZoneCollapsed(row,!row.classList.contains('collapsed'));
+    refreshZoneControls();
+  });
+  scheduleDraftSave();
+}
+function toggleAllZones(){
+  const rows=[...document.querySelectorAll('#zones .row3')];
+  const collapse=rows.some(row=>!row.classList.contains('collapsed'));
+  keepScrollPosition(document.getElementById('zonesToolbarAnchor'),()=>{
+    rows.forEach(row=>setZoneCollapsed(row,collapse));
+    refreshZoneControls();
+  },8);
+  scheduleDraftSave();
+}
+function refreshZoneControls(){
+  const rows=[...document.querySelectorAll('#zones .row3')];
+  document.getElementById('zoneCount').textContent=String(rows.length);
+  document.getElementById('foldZonesBtn').textContent=rows.some(row=>!row.classList.contains('collapsed'))?'Tout replier':'Tout ouvrir';
+  rows.forEach(row=>{
+    const button=row.querySelector('.remove');
+    button.disabled=rows.length<=1;
+    if(button.disabled)button.title='Conserver au moins une zone';
+  });
+}
+function flipSideControl(row,selector){
+  const control=row.querySelector(selector);
+  if(control)control.value=control.value==='right'?'left':'right';
+}
+function convertOrientation(){
+  toggleReorderMode(false);
+  const container=document.getElementById('zones');
+  const rows=[...container.querySelectorAll('.row3')];
+  const gaps=rows.slice(0,-1).map(row=>row.querySelector('.gapmm').value);
+  rows.forEach(row=>{
+    flipSideControl(row,'.entrySide');
+    flipSideControl(row,'.entrySideBottom');
+    const order=row.querySelector('.bandOrder');
+    if(order.value==='20-25')order.value='25-20';
+    else if(order.value==='25-20')order.value='20-25';
+    else{
+      const left=row.querySelector('.band25Left'),right=row.querySelector('.band25Right');
+      const saved=left.value;left.value=right.value;right.value=saved;
+    }
+    updateBandPlacement(row);
+  });
+  const reversed=[...rows].reverse();
+  reversed.forEach(row=>container.appendChild(row));
+  reversed.forEach((row,index)=>{
+    const gap=row.querySelector('.gapmm');
+    gap.disabled=false;
+    gap.value=index<reversed.length-1?gaps[gaps.length-1-index]:'0';
+    gap.dataset.savedGap=gap.value;
+  });
+  renumber();
+  updateOrientationHint();
+  calculate();
+  scheduleDraftSave();
+}
+function toggleOrientationConversion(){
+  const select=document.getElementById('viewSide');
+  select.value=select.value==='front'?'rear':'front';
+  convertOrientation();
+}
+function updateOrientationHint(){
+  const rear=isRearView();
+  document.getElementById('orientationConvertBtn').textContent=rear?'Convertir en vue de face':'Convertir en vue arrière';
+  document.getElementById('viewSideHint').innerHTML=rear
+    ? '<strong>Saisie déclarée en vue arrière.</strong> Les valeurs restent exactement dans l’ordre où tu les as saisies. Utilise « Convertir en vue de face » pour inverser l’ordre des écrans, les vides et les côtés gauche/droite. Chaque écran garde ses numéros de ports RJ45 et son contrôleur.'
+    : '<strong>Saisie déclarée en vue de face.</strong> Les valeurs restent exactement dans l’ordre où tu les as saisies. La conversion miroir change les côtés visibles, mais chaque port RJ45 reste affecté au même écran et au même boîtier.';
+}
+function updateMultiSendingMode(recalculate=true){
+  const enabled=document.getElementById('multiSending').checked;
+  document.body.classList.toggle('multi-sending',enabled);
+  if(recalculate)calculate();
+}
 let draggedZone=null;
 let pendingDragY=null;
 let dragAnimationFrame=null;
 function updateDragHandle(row){
   const name=row.querySelector('.screenName').value.trim()||'Écran sans nom';
-  row.querySelector('.drag-handle').textContent=`↕ ${name} — maintenir et déplacer`;
+  row.querySelector('.zone-name').textContent=name+(document.getElementById('appMode').value==='profuse'&&row.dataset.groupId?' · '+(row.dataset.groupName||'Groupe'):'');
+  const action=row.classList.contains('collapsed')?'Ouvrir':'Replier';
+  const toggle=row.querySelector('.zone-toggle');
+  toggle.title=`${action} « ${name} »`;
+  toggle.setAttribute('aria-label',toggle.title);
+  const handle=row.querySelector('.drag-handle');
+  const menu=row.querySelector('.zone-menu-button');
+  menu.title=`Actions de « ${name} »`;
+  menu.setAttribute('aria-label',menu.title);
+  handle.textContent=`↕ ${name}`;
+  handle.setAttribute('aria-label',`Déplacer « ${name} »`);
+  ['duplicate','remove'].forEach(className=>{
+    const button=row.querySelector('.'+className);
+    button.title=`${className==='duplicate'?'Dupliquer':'Supprimer'} « ${name} »`;
+    button.setAttribute('aria-label',button.title);
+  });
 }
 function toggleReorderMode(force){
   const zones=document.getElementById('zones');
   const active=typeof force==='boolean'?force:!zones.classList.contains('reorder-mode');
-  zones.classList.toggle('reorder-mode',active);
-  document.getElementById('reorderBtn').textContent=active?'✓ Terminer la réorganisation':'↕ Réorganiser les écrans';
-  document.querySelectorAll('.row3').forEach(updateDragHandle);
+  const change=()=>{
+    zones.classList.toggle('reorder-mode',active);
+    const button=document.getElementById('reorderBtn');
+    button.textContent=active?'✓ Terminer':'↕ Réorganiser';
+    button.setAttribute('aria-pressed',String(active));
+    document.getElementById('foldZonesBtn').disabled=active;
+    document.querySelectorAll('.row3').forEach(updateDragHandle);
+  };
+  if(typeof force==='boolean')change();
+  else keepScrollPosition(document.getElementById('zonesToolbarAnchor'),change,8);
 }
 function initZoneDrag(row){
   const handle=row.querySelector('.drag-handle');
@@ -492,6 +974,17 @@ function initZoneDrag(row){
     draggedZone=row;
     row.classList.add('dragging');
   },{passive:true});
+  handle.addEventListener('keydown',event=>{
+    if(!['ArrowUp','ArrowDown'].includes(event.key))return;
+    event.preventDefault();
+    const neighbour=event.key==='ArrowUp'?row.previousElementSibling:row.nextElementSibling;
+    if(!neighbour)return;
+    const container=row.parentElement;
+    if(event.key==='ArrowUp')container.insertBefore(row,neighbour);
+    else container.insertBefore(neighbour,row);
+    renumber();calculate();
+    handle.focus({preventScroll:true});
+  });
 }
 function placeDraggedZone(clientY){
   if(!draggedZone)return;
@@ -550,7 +1043,8 @@ function renumber(){
     const unit=mode==='mm'?'mesure LED (mm)':mode==='px'?'résolution (px)':'bandes de 20 cm';
     r.querySelector('.zoneLabel').textContent=`Zone ${i+1} — ${unit}`;
     const nameInput=r.querySelector('.screenName');
-    if(!nameInput.value.trim())nameInput.value=`Écran ${i+1}`;
+    const profuse=document.getElementById('appMode').value==='profuse';
+    if(!nameInput.value.trim()||(profuse&&/^Zone \d+$/.test(nameInput.value.trim())))nameInput.value=`${profuse?'Zone':'Écran'} ${i+1}`;
     updateDragHandle(r);
     const isLast=i===rows.length-1;
     const gap=r.querySelector('.gapmm');
@@ -565,6 +1059,7 @@ function renumber(){
       if(wasDisabled)gap.value=gap.dataset.savedGap??'80';
     }
   });
+  refreshZoneControls();
 }
 function parseNumber(value){
   const cleaned=String(value??'').trim().replace(/\s/g,'').replace(',','.');
@@ -591,6 +1086,20 @@ function updateBandPlacement(row){
     row.querySelector('.zonevalue25').value=String(left+right);
   }
 }
+function syncCustomBandSplit(row,total25){
+  if(row.querySelector('.bandOrder').value!=='custom')return {left:0,right:0};
+  const leftInput=row.querySelector('.band25Left');
+  const rightInput=row.querySelector('.band25Right');
+  const total=Math.max(0,Math.round(total25));
+  const oldLeft=Math.max(0,Math.round(parseNumber(leftInput.value)||0));
+  const oldRight=Math.max(0,Math.round(parseNumber(rightInput.value)||0));
+  const oldTotal=oldLeft+oldRight;
+  const left=oldTotal>0?Math.min(total,Math.max(0,Math.round(total*oldLeft/oldTotal))):Math.floor(total/2);
+  const right=total-left;
+  leftInput.value=String(left);rightInput.value=String(right);
+  row.querySelector('.zonevalue25').value=String(total);
+  return {left,right};
+}
 function buildBandList(count20,count25,bandOrder,bandW,bandW25,bandH,axis,count25Left=0,count25Right=0){
   const make=(count,size,pixels)=>Array.from({length:count},()=>({size,pixels}));
   const group20=make(count20,20,axis==='X'?bandW:bandH);
@@ -606,6 +1115,23 @@ function bandAxisPixels(){
   if(axis==='Y')return parseNumber(document.getElementById('bandHeight').value);
   return parseNumber(document.getElementById('bandWidth').value);
 }
+function inferBandMix(targetPixels,bandW,bandW25){
+  const target=Math.max(1,Math.round(targetPixels));
+  const max25=Math.ceil(target/bandW25)+2;
+  const max20=Math.ceil(target/bandW)+2;
+  let best=null;
+  for(let count25=0;count25<=max25;count25++){
+    for(let count20=0;count20<=max20;count20++){
+      if(count20+count25===0)continue;
+      const pixels=count20*bandW+count25*bandW25;
+      const candidate={count20,count25,pixels,error:Math.abs(pixels-target)};
+      if(!best||candidate.error<best.error||
+        (candidate.error===best.error&&candidate.count25>best.count25)||
+        (candidate.error===best.error&&candidate.count25===best.count25&&candidate.count20<best.count20))best=candidate;
+    }
+  }
+  return best;
+}
 function convertZoneValue(value,fromMode,toMode,pitch,bandPx){
   if(fromMode===toMode)return value;
   let pixels;
@@ -618,9 +1144,48 @@ function convertZoneValue(value,fromMode,toMode,pitch,bandPx){
 }
 function showCalculationError(message){
   lastCalculation=null;
+  document.getElementById('profuseGroupAlerts').textContent='';
+  document.querySelectorAll('.zone-size-alert').forEach(alert=>alert.textContent='');
+  document.getElementById('calculationStatus').textContent=message;
+  document.getElementById('calculationStatus').classList.add('has-error');
   document.getElementById('summary').innerHTML=`<strong>${message}</strong>`;
   document.getElementById('table').innerHTML='';
+  document.getElementById('novalctTable').innerHTML='';
   document.getElementById('diagram').innerHTML='';
+}
+function updateAppMode(convertBands=true){
+  const profuse=document.getElementById('appMode').value==='profuse';
+  document.body.classList.toggle('profuse-mode',profuse);
+  const bandOption=document.querySelector('#inputMode option[value="bands"]');
+  bandOption.disabled=profuse;
+  if(profuse&&convertBands&&document.getElementById('inputMode').value==='bands'){
+    document.getElementById('inputMode').value='px';
+    updateMode();
+  }
+  document.getElementById('diagramHeading').textContent=profuse?'Schéma des zones Profuse':'Schéma Complex Screen';
+  document.getElementById('diagramHint').textContent=profuse
+    ? 'Vue simplifiée des zones, des vides et des Start X/Y à reporter dans Profuse.'
+    : 'Le schéma reprend automatiquement les zones, les vides et les Start X/Y calculés.';
+  if(profuse)document.getElementById('zoneHint').textContent='Indique uniquement la mesure ou la résolution de chaque zone et la largeur du vide situé après.';
+  document.getElementById('orderHint').innerHTML=profuse
+    ? '<strong>Ordre Profuse :</strong> réorganise les zones dans l’ordre de lecture du contenu.'
+    : '<strong>Ordre du schéma : vue de face de l’écran.</strong> Passe en mode réorganisation pour déplacer facilement les écrans de gauche à droite.';
+  document.querySelectorAll('.screenNameLabel').forEach(label=>label.textContent=profuse?'Nom de la zone':'Nom de l’écran');
+  document.querySelectorAll('.row3').forEach((row,i)=>{
+    const name=row.querySelector('.screenName');
+    if(profuse&&/^Écran \d+$/.test(name.value.trim()))name.value=`Zone ${i+1}`;
+    updateDragHandle(row);
+  });
+  updateProfuseDimensionLabels();
+  toggleReorderMode(document.getElementById('zones').classList.contains('reorder-mode'));
+  updateOrientationHint();
+  calculate();
+}
+function updateProfuseDimensionLabels(){
+  const dimension=document.getElementById('axis').value==='X'?'Hauteur':'Largeur';
+  document.getElementById('profuseCrossLabel').textContent=`${dimension} par défaut des zones (px)`;
+  document.querySelectorAll('.profuseZoneCrossLabel').forEach(label=>label.textContent=`${dimension} de cette zone (px)`);
+  document.querySelectorAll('.profuseZoneCross').forEach(input=>input.placeholder=document.getElementById('profuseCrossAxis').value+' px par défaut');
 }
 function updateMode(){
   const newMode=document.getElementById('inputMode').value;
@@ -631,11 +1196,14 @@ function updateMode(){
   const bandW25=parseNumber(document.getElementById('bandWidth25').value);
   const bandH=parseNumber(document.getElementById('bandHeight').value);
   document.body.classList.toggle('bands-mode',newMode==='bands');
-  document.getElementById('zoneHint').textContent=newMode==='mm'
-    ? 'Mesure chaque partie LED, puis indique la largeur du montant situé après.'
-    : newMode==='px'
-      ? 'Indique la résolution connue de chaque zone, puis la largeur du montant situé après.'
-      : 'Indique séparément le nombre de bandes de 20 cm et de 25 cm dans chaque écran. Les deux formats peuvent être mélangés.';
+  const profuse=document.getElementById('appMode').value==='profuse';
+  document.getElementById('zoneHint').textContent=profuse
+    ? (newMode==='mm'?'Mesure chaque zone, puis indique le vide situé après.':'Indique la résolution de chaque zone, puis le vide situé après.')
+    : newMode==='mm'
+      ? 'Mesure chaque partie LED, puis indique la largeur du montant situé après.'
+      : newMode==='px'
+        ? 'Indique la résolution connue de chaque zone, puis la largeur du montant situé après.'
+        : 'Indique séparément le nombre de bandes de 20 cm et de 25 cm dans chaque écran. Les deux formats peuvent être mélangés.';
   document.querySelectorAll('.row3').forEach((r,i)=>{
     const bandPx=bandAxisPixels();
     const input=r.querySelector('.zonevalue');
@@ -650,8 +1218,17 @@ function updateMode(){
         input25.value='0';
       }else if(newMode==='bands'){
         const pixels=previousMode==='mm'?oldValue/pitch:oldValue;
-        input.value=formatInput(Math.max(1,Math.round(pixels/bandPx)));
-        input25.value='0';
+        if(axis==='X'){
+          const mix=inferBandMix(pixels,bandW,bandW25);
+          input.value=String(mix.count20);
+          input25.value=String(mix.count25);
+          const order=r.querySelector('.bandOrder');
+          if(order.value==='custom')syncCustomBandSplit(r,mix.count25);
+          else order.value=isRearView()?'25-20':'20-25';
+        }else{
+          input.value=formatInput(Math.max(1,Math.round(pixels/bandPx)));
+          input25.value='0';
+        }
       }else{
         input.value=formatInput(convertZoneValue(oldValue,previousMode,newMode,pitch,bandPx));
       }
@@ -664,6 +1241,7 @@ function updateMode(){
   calculate();
 }
 function calculate(){
+  document.getElementById('scrExportStatus').textContent='';
   const pitch=parseNumber(document.getElementById('pitch').value);
   const axis=document.getElementById('axis').value;
   const mode=document.getElementById('inputMode').value;
@@ -672,83 +1250,342 @@ function calculate(){
   const bandW=parseNumber(document.getElementById('bandWidth').value);
   const bandW25=parseNumber(document.getElementById('bandWidth25').value);
   const bandH=parseNumber(document.getElementById('bandHeight').value);
+  const profuseCrossAxis=parseNumber(document.getElementById('profuseCrossAxis').value);
+  const profuseMode=document.getElementById('appMode').value==='profuse';
   const rows=[...document.querySelectorAll('.row3')];
   scheduleDraftSave();
   if(!Number.isFinite(pitch)||pitch<=0){
     showCalculationError('Entre un pitch valide supérieur à 0.'); return;
   }
-  if(!Number.isFinite(bandW)||bandW<=0||!Number.isFinite(bandW25)||bandW25<=0||!Number.isFinite(bandH)||bandH<=0){
-    showCalculationError('Entre des résolutions valides pour les bandes de 20 cm, 25 cm et pour leur hauteur.'); return;
+  if((!profuseMode&&(!Number.isFinite(bandW)||bandW<=0||!Number.isFinite(bandW25)||bandW25<=0||!Number.isFinite(bandH)||bandH<=0))||(profuseMode&&(!Number.isFinite(profuseCrossAxis)||profuseCrossAxis<=0))){
+    showCalculationError(profuseMode?'Entre une dimension commune valide supérieure à 0.':'Entre des résolutions valides pour les bandes de 20 cm, 25 cm et pour leur hauteur.'); return;
   }
-  let start=0, real=0, gaps=0, gapMillimeters=0, starts=[], invalid=false, zones=[];
+  let start=0, real=0, gaps=0, gapMillimeters=0, invalid=false, zones=[];
   let t=`<table><thead><tr><th>Écran</th><th>Start ${axis}</th><th>LED</th><th>Vide</th></tr></thead><tbody>`;
   rows.forEach((r,i)=>{
     updateBandPlacement(r);
     const entered=parseNumber(r.querySelector('.zonevalue').value);
+    const customCross=r.querySelector('.profuseZoneCross').value.trim();
+    const crossPixels=profuseMode&&customCross?parseNumber(customCross):profuseCrossAxis;
     const entered25=parseNumber(r.querySelector('.zonevalue25').value);
     const mm=parseNumber(r.querySelector('.gapmm').value);
+    const sendingCard=document.getElementById('multiSending').checked?Math.max(1,Math.round(parseNumber(r.querySelector('.sendingCard').value)||1)):1;
     const port=parseInt(r.querySelector('.rj45Port').value,10);
     const entrySide=r.querySelector('.entrySide').value;
-    const controlLayout=r.querySelector('.controlLayout').value;
+    const controlLayout=profuseMode?'single-top':r.querySelector('.controlLayout').value;
     const dualControl=controlLayout==='dual';
-    const topHeight=dualControl?parseNumber(r.querySelector('.heightTop').value):controlLayout==='single-top'?bandH:0;
-    const bottomHeight=dualControl?parseNumber(r.querySelector('.heightBottom').value):controlLayout==='single-bottom'?bandH:0;
+    const topHeight=profuseMode?profuseCrossAxis:dualControl?parseNumber(r.querySelector('.heightTop').value):controlLayout==='single-top'?bandH:0;
+    const bottomHeight=profuseMode?0:dualControl?parseNumber(r.querySelector('.heightBottom').value):controlLayout==='single-bottom'?bandH:0;
     const portBottom=dualControl?parseInt(r.querySelector('.rj45PortBottom').value,10):null;
     const entrySideBottom=dualControl?r.querySelector('.entrySideBottom').value:null;
     r.querySelector('.dualTotal').textContent=dualControl&&Number.isFinite(topHeight)&&Number.isFinite(bottomHeight)?`Hauteur totale : ${topHeight+bottomHeight} px`:'';
-    const bandOrder=r.querySelector('.bandOrder').value;
-    const count25Left=bandOrder==='custom'?Math.max(0,Math.round(parseNumber(r.querySelector('.band25Left').value)||0)):0;
-    const count25Right=bandOrder==='custom'?Math.max(0,Math.round(parseNumber(r.querySelector('.band25Right').value)||0)):0;
+    let bandOrder=r.querySelector('.bandOrder').value;
+    if(!bandsMode&&!profuseMode&&axis==='X'&&bandOrder!=='custom'){
+      bandOrder=isRearView()?'25-20':'20-25';
+      r.querySelector('.bandOrder').value=bandOrder;
+    }
+    let count25Left=bandOrder==='custom'?Math.max(0,Math.round(parseNumber(r.querySelector('.band25Left').value)||0)):0;
+    let count25Right=bandOrder==='custom'?Math.max(0,Math.round(parseNumber(r.querySelector('.band25Right').value)||0)):0;
     const screenName=r.querySelector('.screenName').value.trim()||`Écran ${i+1}`;
     const count20=bandsMode?Math.max(0,Math.round(Number.isFinite(entered)?entered:0)):null;
     const count25=bandsMode?Math.max(0,Math.round(Number.isFinite(entered25)?entered25:0)):null;
-    if((bandsMode?(count20+count25<=0):(!Number.isFinite(entered)||entered<=0))||!Number.isFinite(mm)||mm<0||!Number.isFinite(topHeight)||!Number.isFinite(bottomHeight)||(dualControl&&(topHeight<=0||bottomHeight<=0))){invalid=true;return}
+    if((bandsMode?(count20+count25<=0):(!Number.isFinite(entered)||entered<=0))||!Number.isFinite(mm)||mm<0||(!profuseMode&&(!Number.isFinite(topHeight)||!Number.isFinite(bottomHeight)||(dualControl&&(topHeight<=0||bottomHeight<=0))))||(profuseMode&&(!Number.isInteger(crossPixels)||crossPixels<=0))){invalid=true;return}
     const zoneRaw=measureMode?entered/pitch:bandsMode?(axis==='X'?count20*bandW+count25*bandW25:(count20+count25)*bandH):entered;
     const z=Math.round(zoneRaw);
+    if(z<=0){invalid=true;return}
     const raw=mm/pitch, gp=Math.round(raw);
-    const inferred20=Math.max(1,Math.round(z/(axis==='X'?bandW:bandH)));
-    const actual20=bandsMode?count20:inferred20;
-    const actual25=bandsMode?count25:0;
+    const inferredMix=profuseMode?{count20:1,count25:0}:axis==='X'?inferBandMix(z,bandW,bandW25):{count20:Math.max(1,Math.round(z/bandH)),count25:0};
+    const actual20=bandsMode?count20:inferredMix.count20;
+    const actual25=bandsMode?count25:inferredMix.count25;
+    if(!bandsMode&&bandOrder==='custom')({left:count25Left,right:count25Right}=syncCustomBandSplit(r,actual25));
     const bandCount=actual20+actual25;
-    const bandList=buildBandList(actual20,actual25,bandOrder,bandW,bandW25,bandH,axis,count25Left,count25Right);
+    const bandList=profuseMode?[]:buildBandList(actual20,actual25,bandOrder,bandW,bandW25,bandH,axis,count25Left,count25Right);
+    const inferredBandPixels=profuseMode||axis!=='X'?z:Math.round(bandList.reduce((sum,b)=>sum+b.pixels,0));
+    const inferenceError=inferredBandPixels-z;
     const mixLabel=bandList.map(b=>b.size).reduce((parts,size)=>{
       const last=parts.at(-1);if(last&&last.size===size)last.count++;else parts.push({size,count:1});return parts;
     },[]).map(g=>`${g.count}×${g.size} cm`).join(' + ');
     r.querySelector('.converted').textContent=measureMode
       ? `${entered.toFixed(1).replace('.',',')} mm ÷ ${String(pitch).replace('.',',')} = ${zoneRaw.toFixed(2).replace('.',',')} px → ${z} px`
-      : bandsMode?`${mixLabel} = ${z} px`:'';
-    starts.push(start);
+      : bandsMode?`${mixLabel} = ${z} px`:profuseMode||axis!=='X'?'':`${mixLabel} = ${inferredBandPixels} px${inferenceError===0?' — exact':` — écart ${inferenceError>0?'+':''}${inferenceError} px`}`;
     t+=`<tr><td>${escapeXml(screenName)}</td><td><strong>${start}</strong></td><td>${z}px${measureMode?' ('+zoneRaw.toFixed(2).replace('.',',')+')':''}</td><td>${i===rows.length-1?'—':gp+'px ('+raw.toFixed(2).replace('.',',')+')'}</td></tr>`;
     real+=z;
-    const zoneBandWidth=Math.max(actual20?bandW:0,actual25?bandW25:0);
-    zones.push({index:i+1,name:screenName,pixels:z,start,gapPx:i<rows.length-1?gp:0,gapMm:i<rows.length-1?mm:0,bands:bandCount,count20:actual20,count25:actual25,bandOrder,mixLabel,bandList,bandWidthPx:zoneBandWidth,port,entrySide,controlLayout,dualControl,topHeight,bottomHeight,totalHeight:topHeight+bottomHeight,portBottom,entrySideBottom});
+    const zoneBandWidth=profuseMode?crossPixels:Math.max(actual20?bandW:0,actual25?bandW25:0);
+zones.push({index:i+1,name:screenName,groupId:r.dataset.groupId||'',groupName:r.dataset.groupName||'',groupTargetAxis:Number(r.dataset.groupTargetAxis)||0,groupTargetCross:Number(r.dataset.groupTargetCross)||0,pixels:z,start,gapPx:i<rows.length-1?gp:0,gapMm:i<rows.length-1?mm:0,bands:bandCount,count20:actual20,count25:actual25,bandOrder,mixLabel,bandList,bandWidthPx:zoneBandWidth,crossPixels,bandPixelTotal:inferredBandPixels,bandPixelError:inferenceError,sendingCard,port,entrySide,controlLayout,dualControl,topHeight,bottomHeight,totalHeight:topHeight+bottomHeight,portBottom,entrySideBottom});
     if(i<rows.length-1){start+=z+gp;gaps+=gp;gapMillimeters+=mm}else start+=z;
   });
   if(invalid){
     showCalculationError('Vérifie les mesures : zones et hauteurs doivent être supérieures à 0, et les vides ne peuvent pas être négatifs.'); return;
   }
+  document.getElementById('calculationStatus').textContent='Calculs mis à jour automatiquement.';
+  document.getElementById('calculationStatus').classList.remove('has-error');
   t+='</tbody></table>';
   const logical=real+gaps;
   const nonZeroGapCount=zones.filter(z=>z.gapPx>0).length;
-  const screenWidth=axis==='X'?logical:Math.max(...zones.map(z=>z.bandWidthPx));
-  const screenHeight=axis==='X'?Math.max(...zones.map(z=>z.totalHeight)):logical;
+  const maxCross=profuseMode?Math.max(...zones.map(z=>z.crossPixels)):profuseCrossAxis;
+  const screenWidth=profuseMode?(axis==='X'?logical:maxCross):(axis==='X'?logical:Math.max(...zones.map(z=>z.bandWidthPx)));
+  const screenHeight=profuseMode?(axis==='X'?maxCross:logical):(axis==='X'?Math.max(...zones.map(z=>z.totalHeight)):logical);
   document.getElementById('summary').innerHTML=`
     <div>Résolution LED réelle</div><div class="big">${real} px</div>
     <div>Vides non nuls entre les zones : <strong>${nonZeroGapCount}</strong> — ${formatInput(gapMillimeters)} mm — <strong>${gaps} px virtuels</strong></div>
     <div>Résolution logique sur l’axe ${axis} : <strong>${logical} px</strong></div>
-    <div>Format du schéma : <strong>${screenWidth} × ${screenHeight} px</strong></div>
-    <div style="margin-top:9px">${starts.map((s,i)=>`<span class="pill">${escapeXml(zones[i].name)} : ${axis}=${s}</span>`).join('')}</div>`;
+    <div>${profuseMode?'Format du média Profuse':'Format du schéma'} : <strong>${screenWidth} × ${screenHeight} px</strong></div>`;
   document.getElementById('table').innerHTML=t;
-  lastCalculation={axis,pitch,real,gaps,logical,zones,bandW,bandW25,bandH,screenWidth,screenHeight};
+  lastCalculation={axis,pitch,real,gaps,logical,zones,bandW,bandW25,bandH,screenWidth,screenHeight,profuseCrossAxis};
+  renderParameterTables();
   renderDiagram();
+}
+
+
+function colorForProfuseGroup(id){
+  const palette=['#6d28d9','#be185d','#0f766e','#a16207','#1d4ed8','#b91c1c','#4d7c0f','#0e7490'];
+  let hash=0;
+  for(const char of String(id))hash=(hash*31+char.charCodeAt(0))>>>0;
+  return palette[hash%palette.length];
+}
+function buildProfuseGroups(layout){
+  const groups=[];
+  let current=null;
+  for(const zone of layout.zones){
+    if(!zone.groupId){current=null;continue}
+    if(!current||current.id!==zone.groupId){
+      current={id:zone.groupId,name:zone.groupName||'Groupe',zones:[]};
+      groups.push(current);
+    }
+    current.zones.push(zone);
+  }
+  return groups.filter(group=>group.zones.length>1).map(group=>{
+    const first=group.zones[0],last=group.zones.at(-1);
+    const x=layout.horizontal?first.x:0;
+    const y=layout.horizontal?0:first.y;
+    const width=layout.horizontal?last.x+last.width-first.x:Math.max(...group.zones.map(z=>z.width));
+    const height=layout.horizontal?Math.max(...group.zones.map(z=>z.height)):last.y+last.height-first.y;
+    const expectedWidth=layout.horizontal?first.groupTargetAxis:first.groupTargetCross;
+    const expectedHeight=layout.horizontal?first.groupTargetCross:first.groupTargetAxis;
+    return {...group,x,y,width,height,expectedWidth,expectedHeight,
+      sizeChanged:Boolean(expectedWidth&&expectedHeight&&(width!==expectedWidth||height!==expectedHeight))};
+  });
+}
+function setProfuseGroupFeedback(groups){
+  const warnings=new Map();
+  for(const group of groups){
+    if(!group.sizeChanged)continue;
+    const widthDelta=group.width-group.expectedWidth,heightDelta=group.height-group.expectedHeight;
+    const delta=[widthDelta?`largeur ${widthDelta>0?'+':''}${widthDelta} px`:'',
+      heightDelta?`hauteur ${heightDelta>0?'+':''}${heightDelta} px`:''].filter(Boolean).join(' · ');
+    const message=`⚠ ${group.name} : écran ${group.width} × ${group.height} px ; taille initiale ${group.expectedWidth} × ${group.expectedHeight} px (${delta}).`;
+    group.zones.forEach(zone=>warnings.set(zone.index,message));
+  }
+  document.querySelectorAll('.row3').forEach((row,i)=>{
+    const message=warnings.get(i+1)||'';
+    row.querySelector('.zone-size-alert').textContent=message;
+    updateDragHandle(row);
+    if(message)row.querySelector('.zone-name').textContent+=' ⚠';
+  });
+}
+function ensureProfuseGroupTargets(c,layout){
+  for(const group of buildProfuseGroups(layout)){
+    if(group.expectedWidth&&group.expectedHeight)continue;
+    const axisTarget=layout.horizontal?group.width:group.height;
+    const crossTarget=layout.horizontal?group.height:group.width;
+    group.zones.forEach(zone=>{
+      const row=document.querySelectorAll('.row3')[zone.index-1];
+      row.dataset.groupTargetAxis=String(axisTarget);
+      row.dataset.groupTargetCross=String(crossTarget);
+      zone.groupTargetAxis=axisTarget;
+      zone.groupTargetCross=crossTarget;
+      c.zones[zone.index-1].groupTargetAxis=axisTarget;
+      c.zones[zone.index-1].groupTargetCross=crossTarget;
+    });
+  }
+  return buildProfuseGroups(layout);
+}
+function renameProfuseGroup(input){
+  const id=input.dataset.groupId;
+  const rows=[...document.querySelectorAll('.row3')].filter(row=>row.dataset.groupId===id);
+  if(!rows.length)return;
+  const name=input.value.trim().slice(0,40)||rows[0].dataset.groupName||'Groupe';
+  rows.forEach(row=>{row.dataset.groupName=name;updateDragHandle(row)});
+  calculate();
+}
+function buildProfuseLayout(c){
+  const horizontal=c.axis==='X';
+  const totalWidth=c.screenWidth;
+  const totalHeight=c.screenHeight;
+  const zones=c.zones.map(z=>({
+    ...z,
+    x:horizontal?z.start:0,
+    y:horizontal?0:z.start,
+    width:horizontal?z.pixels:z.crossPixels,
+    height:horizontal?z.crossPixels:z.pixels,
+    gapX:horizontal?z.start+z.pixels:0,
+    gapY:horizontal?0:z.start+z.pixels,
+    gapWidth:horizontal?z.gapPx:totalWidth,
+    gapHeight:horizontal?totalHeight:z.gapPx
+  }));
+  return {horizontal,totalWidth,totalHeight,zones};
+}
+
+
+// Export expérimental du format DSCI / Complex Screen (.scr).
+function buildScrFile(calculation, sourceWidth, sourceHeight){
+  const c=calculation, regions=[], chains=new Map();
+  let physicalColumn=0;
+  const add=(z,port,side,height,yOffset,gridOffset)=>{
+    if(!height||!port)return;
+    let offset=0;
+    const bands=z.bandList.map((b,index)=>{const item={...b,offset,gridIndex:physicalColumn+index};offset+=b.pixels;return item});
+    const ordered=side==='right'?[...bands].reverse():bands;
+    for(const b of ordered){
+      const key=z.sendingCard+':'+port, order=chains.get(key)||0;
+      chains.set(key,order+1);
+      regions.push({sending:z.sendingCard-1,port:port-1,order,
+        gridX:c.axis==='X'?b.gridIndex:gridOffset,gridY:c.axis==='X'?gridOffset:b.gridIndex,
+        x:c.axis==='X'?z.start+b.offset:0,
+        y:c.axis==='X'?yOffset:z.start+b.offset,
+        width:c.axis==='X'?b.pixels:z.bandWidthPx,
+        height:c.axis==='X'?height:b.pixels});
+    }
+  };
+  for(const z of c.zones){
+    if(z.controlLayout==='dual'){
+      add(z,z.port,z.entrySide,z.topHeight,0,0);
+      add(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,1);
+    }else if(z.controlLayout==='single-bottom')add(z,z.port,z.entrySide,z.bottomHeight,0,0);
+    else add(z,z.port,z.entrySide,z.topHeight||c.bandH,0,0);
+    physicalColumn+=z.bandList.length;
+  }
+  if(!regions.length)throw Error('Aucune bande LED à exporter.');
+  const fits16=n=>Number.isInteger(n)&&n>=0&&n<=65535;
+  if(!fits16(sourceWidth)||!fits16(sourceHeight)||!sourceWidth||!sourceHeight)throw Error('Résolution de la source invalide (1 à 65 535 px par axe).');
+  if(regions.length>65535||137+6+regions.length*16>65535)throw Error('Trop de bandes pour ce format .scr.');
+  for(const r of regions){
+    if(!fits16(r.sending)||r.sending>255||!fits16(r.port)||r.port>255||
+      !fits16(r.order)||!fits16(r.gridX)||!fits16(r.gridY)||!fits16(r.x)||!fits16(r.y)||!fits16(r.width)||!fits16(r.height)||
+      r.width===0||r.height===0||r.x+r.width>sourceWidth||r.y+r.height>sourceHeight)
+      throw Error('Une bande dépasse la résolution source ou une limite du format .scr. Vérifie X, Y, les ports et la taille de la source.');
+  }
+  const checksum=(a,start=4,end=a.length)=>{let sum=0;for(let i=start;i<end;i++)sum=(sum+a[i])&65535;return sum};
+  const dvi=new Uint8Array(128),dv=new DataView(dvi.buffer);
+  dv.setUint16(0,1001,true);dvi[4]=1;dvi[5]=1;
+  dv.setUint16(6,sourceWidth,true);dv.setUint16(8,sourceHeight,true);
+  dv.setUint16(2,checksum(dvi),true);
+  const extension=new TextEncoder().encode('[{"si":0,"x1":0,"y1":0,"x2":0,"y2":0,"x3":0,"y3":0,"x4":0,"y4":0}]');
+  const extensionOffset=137+6+regions.length*16;
+  const screen=new Uint8Array(extensionOffset+2+extension.length),sv=new DataView(screen.buffer);
+  sv.setUint16(0,1006,true);
+  sv.setUint16(28,extensionOffset,true);
+  screen[132]=1;sv.setUint32(133,6+regions.length*16,true);
+  screen[137]=2;screen[138]=0;sv.setUint32(139,regions.length,true);
+  regions.forEach((r,i)=>{
+    const p=143+i*16;
+    screen[p]=r.sending;screen[p+1]=r.port;
+    sv.setUint16(p+2,r.order,true);sv.setUint16(p+4,r.x,true);sv.setUint16(p+6,r.y,true);
+    sv.setUint16(p+8,r.gridX,true);sv.setUint16(p+10,r.gridY,true);
+    sv.setUint16(p+12,r.width,true);sv.setUint16(p+14,r.height,true);
+  });
+  sv.setUint16(extensionOffset,extension.length,true);
+  screen.set(extension,extensionOffset+2);
+  sv.setUint16(2,checksum(screen),true);
+  const adjust=new Uint8Array(173),av=new DataView(adjust.buffer);
+  av.setUint16(0,1002,true);adjust[132]=1;
+  av.setUint16(2,checksum(adjust),true);
+  const file=new Uint8Array(54+dvi.length+screen.length+adjust.length),fv=new DataView(file.buffer);
+  file.set([68,83,67,73]);fv.setUint32(6,dvi.length,true);
+  fv.setUint32(10,screen.length,true);fv.setUint16(14,adjust.length,true);
+  file.set(dvi,54);file.set(screen,54+dvi.length);file.set(adjust,54+dvi.length+screen.length);
+  fv.setUint16(4,checksum(file,6,54+dvi.length+screen.length),true);
+  return file;
+}
+function exportNovaScr(){
+  try{
+    if(document.getElementById('appMode').value==='profuse')throw Error('Passe en mode NovaLCT pour exporter un .scr.');
+    if(isRearView())throw Error('Convertis d’abord le projet en vue de face.');
+    if(!lastCalculation||lastCalculation.zones.some(z=>z.bandPixelError!==0))
+      throw Error('Les bandes estimées ne correspondent pas exactement aux pixels saisis. Corrige les mesures ou renseigne les bandes réelles.');
+    const w=Number(document.getElementById('scrSourceWidth').value);
+    const h=Number(document.getElementById('scrSourceHeight').value);
+    const data=buildScrFile(lastCalculation,w,h);
+    const link=document.createElement('a');
+    const url=URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));
+    link.href=url;link.download=(document.getElementById('diagramTitle').value.trim()||'ecran-led').replace(/[\\/:*?"<>|]+/g,'-')+'.scr';
+    document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    document.getElementById('scrExportStatus').textContent='Fichier .scr généré. À contrôler dans NovaLCT avant toute transmission au contrôleur.';
+  }catch(error){document.getElementById('scrExportStatus').textContent=error.message}
+}
+function renderParameterTables(){
+  if(!lastCalculation)return;
+  const c=lastCalculation;
+  if(document.getElementById('appMode').value==='profuse'){
+    const layout=buildProfuseLayout(c);
+    const groups=ensureProfuseGroupTargets(c,layout);
+    setProfuseGroupFeedback(groups);
+    const alerts=groups.filter(g=>g.sizeChanged).map(g=>`${escapeXml(g.name)} : ${g.width} × ${g.height} px au lieu de ${g.expectedWidth} × ${g.expectedHeight} px`);
+    document.getElementById('profuseGroupAlerts').innerHTML=alerts.length?`<strong style="color:#fbbf24">⚠ Taille d’écran modifiée :</strong> ${alerts.join(' • ')}`:'';
+    const groupRows=groups.map(g=>{
+      const expected=g.expectedWidth&&g.expectedHeight?`${g.expectedWidth} × ${g.expectedHeight}`:'Référence absente';
+      const state=g.sizeChanged?'<strong style="color:#fbbf24">⚠ Taille modifiée</strong>':g.expectedWidth?'✓ Taille conforme':'—';
+      return `<div class="profuse-group-result" style="border-left:5px solid ${colorForProfuseGroup(g.id)}"><label class="profuse-group-name"><span class="group-color-key" style="background:${colorForProfuseGroup(g.id)}" aria-hidden="true"></span>Nom du groupe (${g.zones.length} zones)<input type="text" maxlength="40" value="${escapeXml(g.name)}" data-group-id="${escapeXml(g.id)}" onchange="renameProfuseGroup(this)" autocomplete="off"></label><span>X ${g.x} · Y ${g.y}</span><span>Actuel : <strong>${g.width} × ${g.height} px</strong> · initial : ${expected} px</span><span>${state}</span></div>`;
+    }).join('');
+    const groupTable=groups.length?`<div class="hint"><strong>Groupes divisés — vides intérieurs inclus</strong></div>${groupRows}`:'';
+    const rows=layout.zones.map(z=>`<tr><td>${escapeXml(z.name)}</td><td>${z.x}</td><td>${z.y}</td><td>${z.width}</td><td>${z.height}</td></tr>`).join('');
+    document.getElementById('table').innerHTML=`${groupTable}<div class="hint">Paramètres des zones séparées</div><div class="table-scroll"><table><thead><tr><th>Zone</th><th>X</th><th>Y</th><th>Largeur</th><th>Hauteur</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td><strong>Média étendu — toutes les zones</strong></td><td><strong>0</strong></td><td><strong>0</strong></td><td><strong>${layout.totalWidth}</strong></td><td><strong>${layout.totalHeight}</strong></td></tr></tfoot></table></div><div class="hint">Le média étendu inclut les pixels virtuels correspondant aux vides entre les zones.</div>`;
+    document.getElementById('novalctTable').innerHTML='';
+    return;
+  }
+  document.getElementById('profuseGroupAlerts').textContent='';
+  setProfuseGroupFeedback([]);
+  const counters=new Map(),result=[];
+  const addSection=(z,port,side,height,yOffset,label)=>{
+    if(!height||!port)return;
+    let offset=0;
+    const physicalBands=z.bandList.map(b=>{const item={...b,physicalOffset:offset};offset+=b.pixels;return item});
+    const cableOrder=side==='right'?[...physicalBands].reverse():physicalBands;
+    cableOrder.forEach(b=>{
+      const key=`${z.sendingCard}-${port}`;
+      const receiving=(counters.get(key)||0)+1;counters.set(key,receiving);
+      result.push({groupId:`${z.index}:${label||'single'}`,name:`${z.name}${label}`,sending:z.sendingCard,port,receiving,startX:c.axis==='X'?z.start+b.physicalOffset:0,startY:c.axis==='X'?yOffset:z.start+b.physicalOffset,width:c.axis==='X'?b.pixels:z.bandWidthPx,height:c.axis==='X'?height:b.pixels});
+    });
+  };
+  c.zones.forEach(z=>{
+    if(z.controlLayout==='dual'){
+      addSection(z,z.port,z.entrySide,z.topHeight,0,' — haut');
+      addSection(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,' — bas');
+    }else if(z.controlLayout==='single-bottom')addSection(z,z.port,z.entrySide,z.bottomHeight,0,'');
+    else addSection(z,z.port,z.entrySide,z.topHeight,0,'');
+  });
+  const axisStarts=result.map(r=>c.axis==='X'?r.startX:r.startY);
+  const originIsLoaded=axisStarts.length>0&&Math.min(...axisStarts)===0;
+  const rearWarning=isRearView()?'<br><strong>Attention : vue arrière active.</strong> Convertis en vue de face avant de recopier ces coordonnées dans NovaLCT.':'';
+  const originWarning=originIsLoaded?'':`<br><strong>Anomalie :</strong> aucune Receiving Card ne commence à ${c.axis}=0.`;
+  const approximationWarning=c.zones.some(z=>z.bandPixelError!==0)?'<br><strong>Attention :</strong> au moins un mélange de bandes est approximatif ; vérifie sa largeur réelle avant de recopier le tableau.':'';
+  const groupedResult=[];
+  const screenGroups=new Map();
+  result.forEach(row=>{
+    if(!screenGroups.has(row.groupId)){const group=[];screenGroups.set(row.groupId,group);groupedResult.push(group)}
+    screenGroups.get(row.groupId).push(row);
+  });
+  groupedResult.forEach(group=>group.sort((a,b)=>c.axis==='X'?(a.startX-b.startX)||(a.startY-b.startY):(a.startY-b.startY)||(a.startX-b.startX)));
+  const displayResult=groupedResult.flat();
+  let previousGroup=null;
+  const rows=displayResult.map(r=>{
+    const separator=r.groupId!==previousGroup?`<tr class="screen-separator"><td colspan="6">${escapeXml(r.name)}</td></tr>`:'';
+    previousGroup=r.groupId;
+    return `${separator}<tr><td>${r.sending}</td><td>${r.port}</td><td>${r.startX}</td><td>${r.startY}</td><td>${r.width}</td><td>${r.height}</td></tr>`;
+  }).join('');
+  document.getElementById('novalctTable').innerHTML=`<div class="hint"><strong>Origine du média global : X = 0 • Y = 0.</strong> Tableau classé par position physique croissante ; les vides et les zones suivantes restent dans ce même canevas.</div><table class="novalct-compact"><thead><tr><th>SC</th><th>Port</th><th>Start X</th><th>Start Y</th><th>L</th><th>H</th></tr></thead><tbody>${rows}</tbody></table><div class="hint"><strong>SC</strong> : Sending Card. L’identification et l’ordre des Receiving Cards restent gérés par NovaLCT selon la topologie RJ45.${rearWarning}${originWarning}${approximationWarning}<br>${document.getElementById('inputMode').value==='bands'?'Calcul exact à partir des bandes et des boîtiers haut/bas renseignés.':'Estimation automatique privilégiant les bandes de 25 cm.'}</div>`;
 }
 
 function escapeXml(value){
   return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 }
+function isRearView(){return document.getElementById('viewSide').value==='rear'}
+function displayedSide(side){return side}
 function renderDiagramLegacy(){
   if(!lastCalculation)return;
   const c=lastCalculation;
+  const rear=isRearView();
+  const viewLabel=rear?'VUE ARRIÈRE':'VUE DE FACE';
   const title=document.getElementById('diagramTitle').value.trim()||'Écran LED transparent';
   const horizontal=c.axis==='X';
   const viewW=1200, left=100, top=170, drawW=1000, drawH=360, legendRowH=70;
@@ -757,10 +1594,10 @@ function renderDiagramLegacy(){
   const scale=Math.min(drawW/Math.max(1,c.screenWidth),drawH/Math.max(1,c.screenHeight));
   const originX=left+(drawW-c.screenWidth*scale)/2;
   const originY=top+(drawH-c.screenHeight*scale)/2;
-  const portColors=['#22c55e','#f97316','#a855f7','#eab308','#ec4899','#14b8a6','#ef4444','#3b82f6','#84cc16','#f59e0b'];
-  const colorForPort=port=>portColors[(port-1)%portColors.length];
+  const portColors=['#16a34a','#a16207','#9333ea','#ea580c','#db2777','#0d9488','#dc2626','#2563eb','#65a30d','#d97706','#0891b2','#7c3aed','#be123c','#4f46e5','#15803d','#c2410c','#0369a1','#a21caf','#b45309','#0f766e'];
+  const colorForConnection=(sending,port)=>portColors[(Math.max(1,Number(port))-1)%portColors.length];
   let shapes='',labels='',routes='',connectors='',details='';
-  const usedPorts=new Set(),lastOnPort={};
+  const usedConnections=new Map(),lastOnConnection={};
   c.zones.forEach((z,idx)=>{
     const x=horizontal?originX+z.start*scale:originX;
     const y=horizontal?originY:originY+z.start*scale;
@@ -776,24 +1613,26 @@ function renderDiagramLegacy(){
         ? `<line x1="${bx}" y1="${y}" x2="${bx}" y2="${y+h}" stroke="#64748b" stroke-width="1"/>`
         : `<line x1="${x}" y1="${by}" x2="${x+w}" y2="${by}" stroke="#64748b" stroke-width="1"/>`;
     }
-    if(w>=22)labels+=`<text x="${x+w/2}" y="${y+h/2+8}" text-anchor="middle" fill="#fff" font-size="${Math.max(12,Math.min(26,w/3))}" font-weight="700">E${z.index}</text>`;
+    if(w>=22)labels+=`<text x="${x+w/2}" y="${y+h/2+8}" text-anchor="middle" fill="#fff" font-size="${Math.max(12,Math.min(26,w/3))}" font-weight="700">E${z.index}${w>=(z.dualControl?175:125)?(z.dualControl?' · P'+z.port+'/'+z.portBottom:' · P'+z.port):''}</text>`;
     if(z.dualControl){
       const joinY=y+h*z.topHeight/z.totalHeight;
       shapes+=`<line x1="${x}" y1="${joinY}" x2="${x+w}" y2="${joinY}" stroke="#f8fafc" stroke-width="3" stroke-dasharray="8 6"/>`;
     }
     const drawCable=(port,side,routeY,labelY,positionLabel)=>{
-      const color=colorForPort(port);
-      const entryX=side==='right'?x+w:x;
-      const exitX=side==='right'?x:x+w;
-      usedPorts.add(port);
-      if(lastOnPort[port]){
-        const previous=lastOnPort[port];
+      const connectionKey=`${z.sendingCard}-${port}`;
+      const color=colorForConnection(z.sendingCard,port);
+      const shownSide=displayedSide(side);
+      const entryX=shownSide==='right'?x+w:x;
+      const exitX=shownSide==='right'?x:x+w;
+      usedConnections.set(connectionKey,{sending:z.sendingCard,port});
+      if(lastOnConnection[connectionKey]){
+        const previous=lastOnConnection[connectionKey];
         const bridgeY=(previous.y+routeY)/2;
         connectors+=`<path d="M ${previous.x} ${previous.y} L ${previous.x} ${bridgeY} L ${entryX} ${bridgeY} L ${entryX} ${routeY}" fill="none" stroke="${color}" stroke-width="4" stroke-dasharray="10 7" opacity=".9"/>`;
       }
-      routes+=`<line x1="${entryX}" y1="${routeY}" x2="${exitX}" y2="${routeY}" stroke="${color}" stroke-width="7" stroke-linecap="round" marker-end="url(#arrowP${port})"/>`;
+      routes+=`<line x1="${entryX}" y1="${routeY}" x2="${exitX}" y2="${routeY}" stroke="${color}" stroke-width="7" stroke-linecap="round" marker-end="url(#arrowSC${z.sendingCard}P${port})"/>`;
       routes+=`<circle cx="${entryX}" cy="${routeY}" r="12" fill="${color}" stroke="#fff" stroke-width="3"/>`;
-      lastOnPort[port]={x:exitX,y:routeY};
+      lastOnConnection[connectionKey]={x:exitX,y:routeY};
     };
     const cableInset=Math.min(22,Math.max(6,h*.12));
     if(z.dualControl){
@@ -815,32 +1654,34 @@ function renderDiagramLegacy(){
   });
   c.zones.forEach((z,i)=>{
     const y=legendY+i*legendRowH;
-    const colorTop=colorForPort(z.port);
+    const colorTop=colorForConnection(z.sendingCard,z.port);
     const gap=z.gapPx>0?`${z.gapPx}px / ${formatInput(z.gapMm)} mm`:'aucun';
     details+=`<circle cx="65" cy="${y+9}" r="8" fill="${colorTop}"/>`;
-    if(z.dualControl)details+=`<circle cx="76" cy="${y+9}" r="8" fill="${colorForPort(z.portBottom)}"/>`;
+    if(z.dualControl)details+=`<circle cx="76" cy="${y+9}" r="8" fill="${colorForConnection(z.sendingCard,z.portBottom)}"/>`;
     details+=`<text x="90" y="${y+15}" fill="#111827" font-size="18" font-weight="700">E${z.index} — ${escapeXml(z.name)} • ${z.mixLabel} • ${z.pixels}px × ${z.totalHeight}px • Start ${c.axis} ${z.start}</text>`;
     if(z.dualControl){
       details+=`<text x="90" y="${y+37}" fill="#475569" font-size="15">Double boîtier • haut ${z.topHeight}px ↓ • bas ${z.bottomHeight}px ↑ • total ${z.totalHeight}px</text>`;
-      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">Haut : port ${z.port}, arrivée ${z.entrySide==='right'?'droite':'gauche'} • Bas : port ${z.portBottom}, arrivée ${z.entrySideBottom==='right'?'droite':'gauche'} • vide : ${gap}</text>`;
+      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">${document.getElementById('multiSending').checked?`SC ${z.sendingCard} • `:''}Haut : port ${z.port}, arrivée visible ${displayedSide(z.entrySide)==='right'?'droite':'gauche'} • Bas : port ${z.portBottom}, arrivée visible ${displayedSide(z.entrySideBottom)==='right'?'droite':'gauche'} • vide : ${gap}</text>`;
     }else{
       const position=z.controlLayout==='single-bottom'?'bas ↑':'haut ↓';
       details+=`<text x="90" y="${y+37}" fill="#475569" font-size="15">Boîtier unique en ${position} • hauteur ${z.totalHeight}px</text>`;
-      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">Port ${z.port} • arrivée ${z.entrySide==='right'?'droite':'gauche'} • vide après : ${gap}</text>`;
+      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">${document.getElementById('multiSending').checked?`SC ${z.sendingCard} • `:''}Port ${z.port} • arrivée visible ${displayedSide(z.entrySide)==='right'?'droite':'gauche'} • vide après : ${gap}</text>`;
     }
   });
-  const markers=[...usedPorts].map(port=>`<marker id="arrowP${port}" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="${colorForPort(port)}"/></marker>`).join('');
+  const markers=[...usedConnections.values()].map(item=>`<marker id="arrowSC${item.sending}P${item.port}" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="${colorForConnection(item.sending,item.port)}"/></marker>`).join('');
+  const controllerLabel=document.getElementById('multiSending').checked?`${new Set(c.zones.map(z=>z.sendingCard)).size} contrôleurs / Sending Cards`:'Contrôleur / Sending Card 1';
   const svg=`<svg id="screenDiagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewW} ${viewH}">
     <rect width="${viewW}" height="${viewH}" fill="#ffffff"/>
     <defs>${markers}</defs>
     <text x="60" y="65" fill="#111827" font-family="Arial,sans-serif" font-size="34" font-weight="700">${escapeXml(title)}</text>
-    <text x="60" y="105" fill="#475569" font-family="Arial,sans-serif" font-size="20">VUE DE FACE • ${c.zones.reduce((n,z)=>n+z.bands,0)} bandes • 20 cm=${c.bandW}px • 25 cm=${c.bandW25}px • hauteur max=${c.screenHeight}px • écran ${c.screenWidth} × ${c.screenHeight}px</text>
+    <text x="60" y="102" fill="#475569" font-family="Arial,sans-serif" font-size="20">${viewLabel} • ${controllerLabel}</text>
+    <text x="60" y="134" fill="#64748b" font-family="Arial,sans-serif" font-size="17">${c.zones.reduce((n,z)=>n+z.bands,0)} bandes • 20 cm=${c.bandW}px • 25 cm=${c.bandW25}px • hauteur max=${c.screenHeight}px • écran ${c.screenWidth} × ${c.screenHeight}px</text>
     ${shapes}
     ${connectors}
     ${routes}
     ${labels}
     ${details}
-    <text x="60" y="${legendY+c.zones.length*legendRowH+28}" fill="#475569" font-family="Arial,sans-serif" font-size="16">Même couleur et liaison pointillée : écrans chaînés sur le même port • gris : vide / montant</text>
+    <text x="60" y="${legendY+c.zones.length*legendRowH+28}" fill="#475569" font-family="Arial,sans-serif" font-size="16">Même couleur et liaison pointillée : même contrôleur et même port • gris : vide / montant</text>
   </svg>`;
   document.getElementById('diagram').innerHTML=svg;
 }
@@ -923,8 +1764,60 @@ function renderDiagramDetailed(){
   </svg>`;
   document.getElementById('diagram').innerHTML=svg;
 }
+function renderProfuseDiagram(){
+  if(!lastCalculation)return;
+  const c=lastCalculation;
+  const layout=buildProfuseLayout(c);
+  const rear=isRearView();
+  const title=document.getElementById('diagramTitle').value.trim()||'Zones Profuse';
+  const viewW=1200,drawLeft=100,drawTop=155,drawMaxW=1000,drawMaxH=500,legendRowH=58;
+  const scale=Math.min(drawMaxW/Math.max(1,layout.totalWidth),drawMaxH/Math.max(1,layout.totalHeight));
+  const drawnW=layout.totalWidth*scale,drawnH=layout.totalHeight*scale;
+  const originX=drawLeft+(drawMaxW-drawnW)/2;
+  const originY=drawTop;
+  const legendY=originY+drawnH+65;
+  const groups=buildProfuseGroups(layout);
+  const viewH=legendY+(c.zones.length+groups.length)*legendRowH+70;
+  let shapes='',labels='',details='',groupFrames='';
+  layout.zones.forEach((z,i)=>{
+    const x=originX+z.x*scale,y=originY+z.y*scale,w=z.width*scale,h=z.height*scale;
+    shapes+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#153a5b" stroke="#0284c7" stroke-width="3"/>`;
+    if(w>=30&&h>=24)labels+=`<text x="${x+w/2}" y="${y+h/2+7}" text-anchor="middle" fill="#fff" font-size="${Math.max(12,Math.min(24,Math.min(w/3,h/2)))}" font-weight="700">Z${i+1}</text>`;
+    if(z.gapPx>0){
+      const gx=originX+z.gapX*scale,gy=originY+z.gapY*scale,gw=z.gapWidth*scale,gh=z.gapHeight*scale;
+      shapes+=`<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="#d1d5db"/>`;
+      if(layout.horizontal&&gw>=22)labels+=`<text x="${gx+gw/2}" y="${gy+gh/2}" text-anchor="middle" fill="#374151" font-size="14" transform="rotate(-90 ${gx+gw/2} ${gy+gh/2})">VIDE ${z.gapPx}px</text>`;
+      if(!layout.horizontal&&gh>=22)labels+=`<text x="${gx+gw/2}" y="${gy+gh/2+5}" text-anchor="middle" fill="#374151" font-size="14">VIDE ${z.gapPx}px</text>`;
+    }
+    const dy=legendY+i*legendRowH;
+    details+=`<rect x="60" y="${dy-12}" width="1080" height="50" rx="8" fill="${i%2?'#f8fafc':'#f1f5f9'}"/>`;
+    details+=`<text x="78" y="${dy+10}" fill="#111827" font-size="18" font-weight="700">Z${i+1} — ${escapeXml(z.name)} • X ${z.x} • Y ${z.y} • ${z.width} × ${z.height}px</text>`;
+    details+=`<text x="78" y="${dy+31}" fill="#475569" font-size="14">Start ${c.axis} ${z.start}px • vide après : ${z.gapPx>0?`${z.gapPx}px / ${formatInput(z.gapMm)} mm`:'aucun'}</text>`;
+  });
+  groups.forEach((g,i)=>{
+    const color=colorForProfuseGroup(g.id);
+    const x=originX+g.x*scale,y=originY+g.y*scale,w=g.width*scale,h=g.height*scale;
+    groupFrames+=`<rect x="${x-5}" y="${y-5}" width="${w+10}" height="${h+10}" rx="6" fill="none" stroke="${color}" stroke-width="4" stroke-dasharray="12 6"/>`;
+    const dy=legendY+(c.zones.length+i)*legendRowH;
+    details+=`<rect x="60" y="${dy-12}" width="1080" height="50" rx="8" fill="#f8fafc" stroke="${color}" stroke-width="2"/>`;
+    details+=`<rect x="78" y="${dy+2}" width="12" height="20" rx="2" fill="${color}"/>`;
+    details+=`<text x="102" y="${dy+10}" fill="${color}" font-size="18" font-weight="700">${escapeXml(g.name)} • ${g.zones.length} zones</text>`;
+    details+=`<text x="102" y="${dy+31}" fill="#475569" font-size="14">X ${g.x} • Y ${g.y} • ${g.width} × ${g.height}px${g.sizeChanged?' • Taille modifiée':''}</text>`;
+  });
+  const svg=`<svg id="screenDiagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewW} ${viewH}">
+    <rect width="${viewW}" height="${viewH}" fill="#ffffff"/>
+    <text x="60" y="65" fill="#111827" font-family="Arial,sans-serif" font-size="34" font-weight="700">${escapeXml(title)}</text>
+    <text x="60" y="105" fill="#475569" font-family="Arial,sans-serif" font-size="20">MODE PROFUSE • ${rear?'VUE ARRIÈRE':'VUE DE FACE'} • média étendu ${layout.totalWidth} × ${layout.totalHeight}px</text>
+    <text x="60" y="132" fill="#64748b" font-family="Arial,sans-serif" font-size="16">Vue à l’échelle • coordonnées de programmation conservées en vue de face</text>
+    <rect x="${originX}" y="${originY}" width="${drawnW}" height="${drawnH}" fill="none" stroke="#111827" stroke-width="2" stroke-dasharray="8 5"/>
+    ${shapes}${groupFrames}${labels}${details}
+    <text x="60" y="${legendY+(c.zones.length+groups.length)*legendRowH+28}" fill="#475569" font-family="Arial,sans-serif" font-size="16">Bleu : zones LED • gris clair : vides / montants • proportions X/Y conservées</text>
+  </svg>`;
+  document.getElementById('diagram').innerHTML=svg;
+}
+
 function renderDiagram(){
-  renderDiagramLegacy();
+  if(document.getElementById('appMode').value==='profuse')renderProfuseDiagram();else renderDiagramLegacy();
 }
 function safeFilename(value){
   const cleaned=(value.trim()||'schema-complex-screen').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'-').replace(/^-|-$/g,'').toLowerCase();
@@ -955,9 +1848,14 @@ function downloadUrl(url,filename){
   const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
 }
 document.getElementById('pitch').addEventListener('input',calculate);
-document.getElementById('axis').addEventListener('change',calculate);
+document.getElementById('appMode').addEventListener('change',()=>updateAppMode());
+document.getElementById('multiSending').addEventListener('change',()=>updateMultiSendingMode());
+document.getElementById('axis').addEventListener('change',()=>{updateProfuseDimensionLabels();calculate()});
 document.getElementById('inputMode').addEventListener('change',updateMode);
-document.getElementById('zones').addEventListener('input',calculate);
+document.getElementById('zones').addEventListener('input',event=>{
+  if(event.target.matches('.screenName'))updateDragHandle(event.target.closest('.row3'));
+  calculate();
+});
 document.getElementById('zones').addEventListener('change',event=>{
   if(event.target.classList.contains('controlLayout'))updateControlLayout(event.target.closest('.row3'));
   calculate();
@@ -965,7 +1863,16 @@ document.getElementById('zones').addEventListener('change',event=>{
 document.getElementById('bandWidth').addEventListener('input',calculate);
 document.getElementById('bandWidth25').addEventListener('input',calculate);
 document.getElementById('bandHeight').addEventListener('input',calculate);
+document.getElementById('profuseCrossAxis').addEventListener('input',()=>{updateProfuseDimensionLabels();calculate()});
+document.getElementById('splitCount').addEventListener('input',updateSplitPreview);
+document.querySelectorAll('.split-presets button').forEach(button=>button.addEventListener('click',()=>{
+  document.getElementById('splitCount').value=button.dataset.count;
+  updateSplitPreview();
+}));
+document.getElementById('splitZoneForm').addEventListener('submit',splitSelectedZone);
+document.getElementById('zoneActionsDialog').addEventListener('close',()=>{zoneActionTarget=null});
 document.getElementById('diagramTitle').addEventListener('input',()=>{renderDiagram();scheduleDraftSave()});
+document.getElementById('viewSide').addEventListener('change',()=>{updateOrientationHint();calculate();scheduleDraftSave()});
 document.getElementById('configName').addEventListener('input',scheduleDraftSave);
 document.getElementById('configImport').addEventListener('change',event=>{
   const file=event.target.files[0];if(file)importConfigurationFile(file);event.target.value='';
@@ -973,11 +1880,16 @@ document.getElementById('configImport').addEventListener('change',event=>{
 document.getElementById('savedConfigs').addEventListener('change',event=>{
   if(event.target.value)document.getElementById('configName').value=event.target.value;
 });
+document.querySelectorAll('details[data-panel]').forEach(panel=>panel.addEventListener('toggle',scheduleDraftSave));
 
 refreshSavedConfigs();
 if(!restoreDraft()){addZone(500);previousMode='mm';updateMode()}
+updateMultiSendingMode(false);
+updateAppMode(false);
 appReady=true;
 calculate();
+undoHistory=[historySnapshot()];
+updateHistoryButtons();
 scheduleDraftSave();
 
 if('serviceWorker' in navigator){
