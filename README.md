@@ -64,3 +64,5 @@ Une PWA ne s'installe pas normalement depuis une adresse `file://`.
 - `icon-192.png` et `icon-512.png` : icônes de l'application.
 
 Les groupes Profuse sont encadrés sur le schéma avec la couleur reprise près de leur nom. Les ports 1 et 2 du schéma NovaStar utilisent respectivement vert et jaune ocre, comme les repères NovaLCT ; les numéros de port restent la référence.
+
+Nouveau projet / Réinitialiser : confirmation, retour aux réglages par défaut avec une seule zone à renseigner, mode actuel conservé. Les configurations enregistrées restent disponibles et la réinitialisation peut être annulée.

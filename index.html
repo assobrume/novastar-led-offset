@@ -145,6 +145,7 @@
   <div class="sub">Calcul rapide des décalages pour montants de fenêtre / zones vides</div>
 
   <button id="installBtn">Installer l’application</button>
+  <button id="newProjectBtn" type="button" class="secondary" onclick="resetProject()">↺ Nouveau projet / Réinitialiser</button>
 
   <details class="card" id="settingsPanel" data-panel open>
     <summary>Réglages de l’installation</summary>
@@ -539,6 +540,35 @@ function collectConfiguration(){
     panelStates:Object.fromEntries([...document.querySelectorAll('details[data-panel]')].map(panel=>[panel.id,panel.open])),
     zones:[...document.querySelectorAll('.row3')].map(serializeZone)
   };
+}
+function resetProject(){
+  if(!confirm('Repartir à zéro ? Les paramètres du projet en cours seront remplacés par les valeurs par défaut. Les configurations enregistrées seront conservées. Vous pourrez annuler cette action avec le bouton Annuler.'))return;
+  clearTimeout(historyTimer);
+  const before=historySnapshot();
+  if(before!==undoHistory.at(-1))undoHistory.push(before);
+  const mode=document.getElementById('appMode').value;
+  historyRestoring=true;
+  try{
+    applyConfiguration({schemaVersion:1,variant:APP_VARIANT,appMode:mode,
+      configName:'',multiSending:false,pitch:'3,9',axis:'X',inputMode:'mm',
+      diagramTitle:mode==='profuse'?'Zones Profuse':'Écran LED transparent',
+      viewSide:'front',orientationTransformsData:true,profuseCrossAxis:'454',
+      bandWidth:'50',bandWidth25:'64',bandHeight:'454',scrSourceWidth:'1920',scrSourceHeight:'1080',
+      zones:[{screenName:mode==='profuse'?'Zone 1':'Écran 1',zonevalue:'',gapmm:'0',
+        profuseCross:'454',zonevalue25:'0',band25Left:'0',band25Right:'0',bandOrder:'20-25',
+        sendingCard:'1',rj45Port:'1',entrySide:'left',collapsed:false}],
+      panelStates:{settingsPanel:true,zonesPanel:true}
+    },true);
+  }finally{historyRestoring=false}
+  const after=historySnapshot();
+  if(after!==undoHistory.at(-1))undoHistory.push(after);
+  if(undoHistory.length>HISTORY_LIMIT)undoHistory.splice(0,undoHistory.length-HISTORY_LIMIT);
+  redoHistory=[];
+  document.getElementById('savedConfigs').value='';
+  document.getElementById('scrExportStatus').textContent='';
+  scheduleDraftSave();
+  updateHistoryButtons();
+  document.getElementById('settingsPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function applyConfiguration(data,silent=false){
   if(!data||data.schemaVersion!==1||!Array.isArray(data.zones)||!data.zones.length){
