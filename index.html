@@ -21,6 +21,10 @@
       padding:max(16px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom));
     }
     .wrap{max-width:760px;margin:auto}
+    .project-actions{display:flex;justify-content:flex-end;margin:16px 0 18px}
+    #newProjectBtn{width:auto;min-height:44px;margin:0;padding:10px 15px;background:#171719;border:1px solid #3b82f6;color:#bfdbfe;font-size:.9rem;border-radius:10px}
+    details.card>summary::after{flex-shrink:0}
+    details.card>summary>span{min-width:0;overflow-wrap:anywhere}
     h1{font-size:1.45rem;margin:0 0 5px}
     .sub{color:#9ca3af;margin-bottom:16px}
     .card{background:#1c1c1e;border:1px solid #3a3a3c;border-radius:15px;padding:15px;margin-bottom:13px}
@@ -145,7 +149,7 @@
   <div class="sub">Calcul rapide des décalages pour montants de fenêtre / zones vides</div>
 
   <button id="installBtn">Installer l’application</button>
-  <button id="newProjectBtn" type="button" class="secondary" onclick="resetProject()">↺ Nouveau projet / Réinitialiser</button>
+  <div class="project-actions"><button id="newProjectBtn" type="button" onclick="resetProject()" title="Réinitialiser les paramètres du projet">↺ Nouveau projet</button></div>
 
   <details class="card" id="settingsPanel" data-panel open>
     <summary>Réglages de l’installation</summary>
