@@ -101,7 +101,7 @@
     .profuse-only{display:none}
     .profuse-mode .novastar-only{display:none!important}
     .dual-extra{display:none}
-    .row3[data-control-layout="dual"] .dual-extra{display:block}
+    .row3:is([data-control-layout="dual"],[data-control-layout="dual-horizontal"]) .dual-extra{display:block}
     .beta-badge{display:inline-block;margin-left:7px;padding:3px 7px;border-radius:999px;background:#f59e0b;color:#111827;font-size:.72rem;vertical-align:middle}
     .hint{color:#9ca3af;font-size:.86rem;margin-top:8px;line-height:1.45}
     .profuse-group-result{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;margin-top:8px;padding:10px;border:1px solid #48484a;border-radius:9px;background:#242427;font-size:.86rem}
@@ -252,7 +252,7 @@
         <input id="bandWidth25" type="text" value="64" inputmode="numeric" autocomplete="off">
       </div>
       <div class="novastar-only">
-        <label>Résolution d’une bande — Y (px)</label>
+        <label>Longueur d’une bande — Y verticale / X horizontale (px)</label>
         <input id="bandHeight" type="text" value="454" inputmode="numeric" autocomplete="off">
       </div>
     </div>
@@ -578,7 +578,7 @@ function resetProject(){
   document.getElementById('settingsPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function applyConfiguration(data,silent=false){
-  if(!data||data.schemaVersion!==1||!Array.isArray(data.zones)||!data.zones.length){
+  if(!data||data.schemaVersion!==1||!Array.isArray(data.zones)||!data.zones.length||!data.zones.every(zone=>zone&&typeof zone==='object'&&!Array.isArray(zone))){
     if(!silent)alert('Ce fichier de configuration est invalide.');return false;
   }
   if(data.variant&&data.variant!==APP_VARIANT&&data.variant!=='stable'){
@@ -743,7 +743,7 @@ function splitSelectedZone(event){
   });
 }
 function readSavedConfigurations(){
-  try{return JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)||'{}')}catch{return {}}
+  try{const data=JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY)||'{}');return Object.assign(Object.create(null),data&&typeof data==='object'&&!Array.isArray(data)?data:{})}catch{return Object.create(null)}
 }
 function writeSavedConfigurations(configs){
   try{localStorage.setItem(CONFIG_STORAGE_KEY,JSON.stringify(configs));return true}catch{alert('Impossible d’enregistrer sur cet appareil.');return false}
@@ -838,16 +838,16 @@ function addZone(value,gapBefore=80){
     <div class="bands-extra novastar-only"><label>Placement des bandes</label><select class="bandOrder"><option value="20-25">20 cm à gauche • 25 cm à droite</option><option value="25-20">25 cm à gauche • 20 cm à droite</option><option value="custom">Personnalisé • 20 cm au milieu</option></select></div>
     <div class="bands-extra band-custom novastar-only"><label>Bandes de 25 cm à gauche</label><input class="band25Left" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
     <div class="bands-extra band-custom novastar-only"><label>Bandes de 25 cm à droite</label><input class="band25Right" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
-    <div class="novastar-only"><label>Configuration des boîtiers</label><select class="controlLayout"><option value="single-top">Boîtier unique en haut</option><option value="single-bottom">Boîtier unique en bas</option><option value="dual">Boîtiers en haut + en bas</option></select></div>
-    <div class="dual-extra novastar-only"><label>Hauteur — partie haute</label><select class="heightTopUnit" aria-label="Unité de la hauteur de la partie haute"><option value="px">Pixels (px)</option><option value="mm">Mesure (mm)</option></select><input class="heightTop" aria-label="Hauteur de la partie haute" style="margin-top:8px" type="text" value="${defaultTopHeight}" inputmode="decimal" autocomplete="off"><div class="hint heightTopHint"></div></div>
-    <div class="dual-extra novastar-only"><label>Hauteur — partie basse</label><select class="heightBottomUnit" aria-label="Unité de la hauteur de la partie basse"><option value="px">Pixels (px)</option><option value="mm">Mesure (mm)</option></select><input class="heightBottom" aria-label="Hauteur de la partie basse" style="margin-top:8px" type="text" value="${defaultBottomHeight}" inputmode="decimal" autocomplete="off"><div class="hint heightBottomHint"></div></div>
+    <div class="novastar-only"><label>Configuration des boîtiers</label><select class="controlLayout"><option value="single-top">Boîtier unique en haut</option><option value="single-bottom">Boîtier unique en bas</option><option value="dual">Boîtiers en haut + en bas</option><option value="single-left">Boîtier unique à gauche — bandes horizontales</option><option value="single-right">Boîtier unique à droite — bandes horizontales</option><option value="dual-horizontal">Boîtiers à gauche + à droite — bandes horizontales</option></select></div>
+    <div class="dual-extra novastar-only"><label class="firstLengthLabel">Hauteur — partie haute</label><select class="heightTopUnit" aria-label="Unité de la hauteur de la partie haute"><option value="px">Pixels (px)</option><option value="mm">Mesure (mm)</option></select><input class="heightTop" aria-label="Hauteur de la partie haute" style="margin-top:8px" type="text" value="${defaultTopHeight}" inputmode="decimal" autocomplete="off"><div class="hint heightTopHint"></div></div>
+    <div class="dual-extra novastar-only"><label class="secondLengthLabel">Hauteur — partie basse</label><select class="heightBottomUnit" aria-label="Unité de la hauteur de la partie basse"><option value="px">Pixels (px)</option><option value="mm">Mesure (mm)</option></select><input class="heightBottom" aria-label="Hauteur de la partie basse" style="margin-top:8px" type="text" value="${defaultBottomHeight}" inputmode="decimal" autocomplete="off"><div class="hint heightBottomHint"></div></div>
     <div class="dual-extra novastar-only"><div class="converted dualTotal">Hauteur totale : ${defaultTotalHeight} px</div></div>
     <div><label class="gapLabel">Vide après (mm)</label><input class="gapmm" type="text" value="0" inputmode="decimal" autocomplete="off"></div>
     <div class="novastar-only sending-field"><label>Contrôleur / Sending Card</label><input class="sendingCard" type="text" value="1" inputmode="numeric" autocomplete="off"></div>
     <div class="novastar-only"><label class="primaryPortLabel">Port RJ45 NovaStar</label><select class="rj45Port">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(number,20)?'selected':''}>Port ${i+1}</option>`).join('')}</select></div>
     <div class="novastar-only"><label class="primaryEntryLabel">Sens d’entrée RJ45</label><select class="entrySide"><option value="left">Arrivée à gauche →</option><option value="right">← Arrivée à droite</option></select></div>
-    <div class="dual-extra novastar-only"><label>Port RJ45 — boîtier bas</label><select class="rj45PortBottom">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(number+1,20)?'selected':''}>Port ${i+1}</option>`).join('')}</select></div>
-    <div class="dual-extra novastar-only"><label>Sens d’entrée — boîtier bas</label><select class="entrySideBottom"><option value="left">Arrivée à gauche →</option><option value="right">← Arrivée à droite</option></select></div>
+    <div class="dual-extra novastar-only"><label class="secondPortLabel">Port RJ45 — boîtier bas</label><select class="rj45PortBottom">${Array.from({length:20},(_,i)=>`<option value="${i+1}" ${i+1===Math.min(number+1,20)?'selected':''}>Port ${i+1}</option>`).join('')}</select></div>
+    <div class="dual-extra novastar-only"><label class="secondEntryLabel">Sens d’entrée — boîtier bas</label><select class="entrySideBottom"><option value="left">Arrivée à gauche →</option><option value="right">← Arrivée à droite</option></select></div>
     `;
   document.getElementById('zones').appendChild(d);
   updateProfuseDimensionLabels();
@@ -861,7 +861,7 @@ function removeZone(b){
   if(document.querySelectorAll('.row3').length<=1)return;
   const row=b.closest('.row3');
   const name=row.querySelector('.screenName').value.trim()||'cette zone';
-  if(!confirm(`Supprimer « ${name} » et ses paramètres ?\nCette action ne peut pas être annulée.`))return;
+  if(!confirm(`Supprimer « ${name} » et ses paramètres ?\nVous pourrez revenir en arrière avec Annuler.`))return;
   const neighbour=row.nextElementSibling||row.previousElementSibling;
   keepScrollPosition(neighbour?.querySelector('.zone-header'),()=>{
     row.remove();renumber();calculate();
@@ -893,9 +893,22 @@ function updateControlLayout(row){
   updateDualHeightUnits(row);
   const layout=row.querySelector('.controlLayout').value;
   row.dataset.controlLayout=layout;
-  const dual=layout==='dual';
-  row.querySelector('.primaryPortLabel').textContent=dual?'Port RJ45 — boîtier haut':'Port RJ45 NovaStar';
-  row.querySelector('.primaryEntryLabel').textContent=dual?'Sens d’entrée — boîtier haut':'Sens d’entrée RJ45';
+  const horizontal=['single-left','single-right','dual-horizontal'].includes(layout);
+  const dual=layout==='dual'||layout==='dual-horizontal';
+  const placement=row.querySelector('.bandOrder').options;
+  placement[0].textContent=horizontal?'20 cm en haut • 25 cm en bas':'20 cm à gauche • 25 cm à droite';
+  placement[1].textContent=horizontal?'25 cm en haut • 20 cm en bas':'25 cm à gauche • 20 cm à droite';
+  row.querySelector('.firstLengthLabel').textContent=horizontal?'Largeur — partie gauche':'Hauteur — partie haute';
+  row.querySelector('.secondLengthLabel').textContent=horizontal?'Largeur — partie droite':'Hauteur — partie basse';
+  row.querySelector('.secondPortLabel').textContent=horizontal?'Port RJ45 — boîtier droit':'Port RJ45 — boîtier bas';
+  row.querySelector('.secondEntryLabel').textContent=horizontal?'Sens d’entrée — boîtier droit':'Sens d’entrée — boîtier bas';
+  for(const selector of ['.entrySide','.entrySideBottom']){
+    const options=row.querySelector(selector).options;
+    options[0].textContent=horizontal?'Arrivée en haut ↓':'Arrivée à gauche →';
+    options[1].textContent=horizontal?'↑ Arrivée en bas':'← Arrivée à droite';
+  }
+  row.querySelector('.primaryPortLabel').textContent=dual?(horizontal?'Port RJ45 — boîtier gauche':'Port RJ45 — boîtier haut'):'Port RJ45 NovaStar';
+  row.querySelector('.primaryEntryLabel').textContent=dual?(horizontal?'Sens d’entrée — boîtier gauche':'Sens d’entrée — boîtier haut'):'Sens d’entrée RJ45';
 }
 function setZoneCollapsed(row,collapsed){
   row.classList.toggle('collapsed',collapsed);
@@ -940,6 +953,17 @@ function convertOrientation(){
   const rows=[...container.querySelectorAll('.row3')];
   const gaps=rows.slice(0,-1).map(row=>row.querySelector('.gapmm').value);
   rows.forEach(row=>{
+    const layout=row.querySelector('.controlLayout');
+    const horizontalBands=['single-left','single-right','dual-horizontal'].includes(layout.value);
+    if(horizontalBands){
+      if(layout.value==='single-left')layout.value='single-right';
+      else if(layout.value==='single-right')layout.value='single-left';
+      else for(const [a,b] of [['heightTop','heightBottom'],['heightTopUnit','heightBottomUnit'],['rj45Port','rj45PortBottom'],['entrySide','entrySideBottom']]){
+        const first=row.querySelector('.'+a),second=row.querySelector('.'+b),value=first.value;first.value=second.value;second.value=value;
+      }
+      updateControlLayout(row);
+      return;
+    }
     flipSideControl(row,'.entrySide');
     flipSideControl(row,'.entrySideBottom');
     const order=row.querySelector('.bandOrder');
@@ -951,12 +975,12 @@ function convertOrientation(){
     }
     updateBandPlacement(row);
   });
-  const reversed=[...rows].reverse();
+  const reversed=document.getElementById('axis').value==='Y'?[...rows]:[...rows].reverse();
   reversed.forEach(row=>container.appendChild(row));
   reversed.forEach((row,index)=>{
     const gap=row.querySelector('.gapmm');
     gap.disabled=false;
-    gap.value=index<reversed.length-1?gaps[gaps.length-1-index]:'0';
+    gap.value=index<reversed.length-1?(document.getElementById('axis').value==='Y'?gaps[index]:gaps[gaps.length-1-index]):'0';
     gap.dataset.savedGap=gap.value;
   });
   renumber();
@@ -1176,10 +1200,10 @@ function bandAxisPixels(){
 function inferBandMix(targetPixels,bandW,bandW25){
   const target=Math.max(1,Math.round(targetPixels));
   const max25=Math.ceil(target/bandW25)+2;
-  const max20=Math.ceil(target/bandW)+2;
   let best=null;
   for(let count25=0;count25<=max25;count25++){
-    for(let count20=0;count20<=max20;count20++){
+    const nearest=Math.max(0,Math.round((target-count25*bandW25)/bandW));
+    for(const count20 of [...new Set([0,nearest,Math.max(0,nearest-1),nearest+1])]){
       if(count20+count25===0)continue;
       const pixels=count20*bandW+count25*bandW25;
       const candidate={count20,count25,pixels,error:Math.abs(pixels-target)};
@@ -1263,7 +1287,8 @@ function updateMode(){
         ? 'Indique la résolution connue de chaque zone, puis la largeur du montant situé après.'
         : 'Indique séparément le nombre de bandes de 20 cm et de 25 cm dans chaque écran. Les deux formats peuvent être mélangés.';
   document.querySelectorAll('.row3').forEach((r,i)=>{
-    const bandPx=bandAxisPixels();
+    const horizontalBands=['single-left','single-right','dual-horizontal'].includes(r.querySelector('.controlLayout').value)&&!profuse;
+    const bandPx=horizontalBands?bandW:bandAxisPixels();
     const input=r.querySelector('.zonevalue');
     const input25=r.querySelector('.zonevalue25');
     const oldValue=parseNumber(input.value);
@@ -1271,24 +1296,25 @@ function updateMode(){
       if(previousMode==='bands'){
         const count20=Math.max(0,Math.round(oldValue));
         const count25=Math.max(0,Math.round(parseNumber(input25.value)||0));
-        const pixels=axis==='X'?count20*bandW+count25*bandW25:(count20+count25)*bandH;
-        input.value=formatInput(newMode==='mm'?pixels*pitch:Math.round(pixels));
+        const pixels=horizontalBands||axis==='X'?count20*bandW+count25*bandW25:(count20+count25)*bandH;
+        input.value=formatInput(newMode==='mm'?(horizontalBands?count20*200+count25*250:pixels*pitch):Math.round(pixels));
         input25.value='0';
       }else if(newMode==='bands'){
         const pixels=previousMode==='mm'?oldValue/pitch:oldValue;
-        if(axis==='X'){
-          const mix=inferBandMix(pixels,bandW,bandW25);
+        if(horizontalBands||axis==='X'){
+          const mix=horizontalBands&&previousMode==='mm'?inferBandMix(oldValue,200,250):inferBandMix(pixels,bandW,bandW25);
           input.value=String(mix.count20);
           input25.value=String(mix.count25);
           const order=r.querySelector('.bandOrder');
           if(order.value==='custom')syncCustomBandSplit(r,mix.count25);
-          else order.value=isRearView()?'25-20':'20-25';
+          else if(!horizontalBands)order.value=isRearView()?'25-20':'20-25';
         }else{
           input.value=formatInput(Math.max(1,Math.round(pixels/bandPx)));
           input25.value='0';
         }
       }else{
-        input.value=formatInput(convertZoneValue(oldValue,previousMode,newMode,pitch,bandPx));
+        if(horizontalBands){const mix=previousMode==='mm'?inferBandMix(oldValue,200,250):inferBandMix(oldValue,bandW,bandW25);input.value=formatInput(newMode==='mm'?mix.count20*200+mix.count25*250:mix.count20*bandW+mix.count25*bandW25);}
+        else input.value=formatInput(convertZoneValue(oldValue,previousMode,newMode,pitch,bandPx));
       }
     }
     const unit=newMode==='mm'?'mesure LED (mm)':newMode==='px'?'résolution (px)':'bandes de 20 cm';
@@ -1331,17 +1357,19 @@ function calculate(){
     const port=parseInt(r.querySelector('.rj45Port').value,10);
     const entrySide=r.querySelector('.entrySide').value;
     const controlLayout=profuseMode?'single-top':r.querySelector('.controlLayout').value;
-    const dualControl=controlLayout==='dual';
-    const topHeight=profuseMode?profuseCrossAxis:dualControl?dualHeightPixels(r.querySelector('.heightTop').value,r.querySelector('.heightTopUnit').value,pitch):controlLayout==='single-top'?bandH:0;
-    const bottomHeight=profuseMode?0:dualControl?dualHeightPixels(r.querySelector('.heightBottom').value,r.querySelector('.heightBottomUnit').value,pitch):controlLayout==='single-bottom'?bandH:0;
+    const horizontalBands=['single-left','single-right','dual-horizontal'].includes(controlLayout);
+    const dualControl=controlLayout==='dual'||controlLayout==='dual-horizontal';
+    r.querySelector('.zoneLabel').textContent=horizontalBands?`Hauteur empilée des bandes — ${bandsMode?'nombre de bandes':measureMode?'mm':'px'}`:r.querySelector('.zoneLabel').textContent;
+    const topHeight=profuseMode?profuseCrossAxis:dualControl?dualHeightPixels(r.querySelector('.heightTop').value,r.querySelector('.heightTopUnit').value,pitch):['single-top','single-left'].includes(controlLayout)?bandH:0;
+    const bottomHeight=profuseMode?0:dualControl?dualHeightPixels(r.querySelector('.heightBottom').value,r.querySelector('.heightBottomUnit').value,pitch):['single-bottom','single-right'].includes(controlLayout)?bandH:0;
     for(const [side,pixels] of [['Top',topHeight],['Bottom',bottomHeight]]){
       r.querySelector('.height'+side+'Hint').textContent=dualControl&&r.querySelector('.height'+side+'Unit').value==='mm'&&Number.isFinite(pixels)?`${pixels} px calculés avec le pitch ${formatInput(pitch)} mm`:'';
     }
     const portBottom=dualControl?parseInt(r.querySelector('.rj45PortBottom').value,10):null;
     const entrySideBottom=dualControl?r.querySelector('.entrySideBottom').value:null;
-    r.querySelector('.dualTotal').textContent=dualControl&&Number.isFinite(topHeight)&&Number.isFinite(bottomHeight)?`Hauteur totale : ${topHeight+bottomHeight} px`:'';
+    r.querySelector('.dualTotal').textContent=dualControl&&Number.isFinite(topHeight)&&Number.isFinite(bottomHeight)?`${horizontalBands?'Largeur':'Hauteur'} totale : ${topHeight+bottomHeight} px`:'';
     let bandOrder=r.querySelector('.bandOrder').value;
-    if(!bandsMode&&!profuseMode&&axis==='X'&&bandOrder!=='custom'){
+    if(!bandsMode&&!profuseMode&&!horizontalBands&&axis==='X'&&bandOrder!=='custom'){
       bandOrder=isRearView()?'25-20':'20-25';
       r.querySelector('.bandOrder').value=bandOrder;
     }
@@ -1351,29 +1379,35 @@ function calculate(){
     const count20=bandsMode?Math.max(0,Math.round(Number.isFinite(entered)?entered:0)):null;
     const count25=bandsMode?Math.max(0,Math.round(Number.isFinite(entered25)?entered25:0)):null;
     if((bandsMode?(count20+count25<=0):(!Number.isFinite(entered)||entered<=0))||!Number.isFinite(mm)||mm<0||(!profuseMode&&(!Number.isFinite(topHeight)||!Number.isFinite(bottomHeight)||(dualControl&&(topHeight<=0||bottomHeight<=0))))||(profuseMode&&(!Number.isInteger(crossPixels)||crossPixels<=0))){invalid=true;return}
-    const zoneRaw=measureMode?entered/pitch:bandsMode?(axis==='X'?count20*bandW+count25*bandW25:(count20+count25)*bandH):entered;
+    const measuredHorizontalMix=measureMode&&horizontalBands?inferBandMix(entered,200,250):null;
+    const zoneRaw=measuredHorizontalMix?measuredHorizontalMix.count20*bandW+measuredHorizontalMix.count25*bandW25:measureMode?entered/pitch:bandsMode?(horizontalBands||axis==='X'?count20*bandW+count25*bandW25:(count20+count25)*bandH):entered;
     const z=Math.round(zoneRaw);
     if(z<=0){invalid=true;return}
-    const raw=mm/pitch, gp=Math.round(raw);
-    const inferredMix=profuseMode?{count20:1,count25:0}:axis==='X'?inferBandMix(z,bandW,bandW25):{count20:Math.max(1,Math.round(z/bandH)),count25:0};
+    let raw=mm/pitch, gp=Math.round(raw);
+    const inferredMix=measuredHorizontalMix|| (profuseMode?{count20:1,count25:0}:horizontalBands||axis==='X'?inferBandMix(z,bandW,bandW25):{count20:Math.max(1,Math.round(z/bandH)),count25:0});
     const actual20=bandsMode?count20:inferredMix.count20;
     const actual25=bandsMode?count25:inferredMix.count25;
     if(!bandsMode&&bandOrder==='custom')({left:count25Left,right:count25Right}=syncCustomBandSplit(r,actual25));
+    if(horizontalBands&&axis==='Y'){const physicalStack=actual20*200+actual25*250;raw=physicalStack>0?mm*z/physicalStack:NaN;gp=Math.round(raw);}
     const bandCount=actual20+actual25;
-    const bandList=profuseMode?[]:buildBandList(actual20,actual25,bandOrder,bandW,bandW25,bandH,axis,count25Left,count25Right);
-    const inferredBandPixels=profuseMode||axis!=='X'?z:Math.round(bandList.reduce((sum,b)=>sum+b.pixels,0));
+    const bandList=profuseMode?[]:buildBandList(actual20,actual25,bandOrder,bandW,bandW25,bandH,horizontalBands?'X':axis,count25Left,count25Right);
+    const inferredBandPixels=profuseMode||(!horizontalBands&&axis!=='X')?z:Math.round(bandList.reduce((sum,b)=>sum+b.pixels,0));
     const inferenceError=inferredBandPixels-z;
     const mixLabel=bandList.map(b=>b.size).reduce((parts,size)=>{
       const last=parts.at(-1);if(last&&last.size===size)last.count++;else parts.push({size,count:1});return parts;
     },[]).map(g=>`${g.count}×${g.size} cm`).join(' + ');
     r.querySelector('.converted').textContent=measureMode
-      ? `${entered.toFixed(1).replace('.',',')} mm ÷ ${String(pitch).replace('.',',')} = ${zoneRaw.toFixed(2).replace('.',',')} px → ${z} px`
+      ? measuredHorizontalMix?`${formatInput(entered)} mm → ${mixLabel} → ${z} px${measuredHorizontalMix.error?' • écart nominal '+formatInput(measuredHorizontalMix.error)+' mm':''}`:`${entered.toFixed(1).replace('.',',')} mm ÷ ${String(pitch).replace('.',',')} = ${zoneRaw.toFixed(2).replace('.',',')} px → ${z} px`
       : bandsMode?`${mixLabel} = ${z} px`:profuseMode||axis!=='X'?'':`${mixLabel} = ${inferredBandPixels} px${inferenceError===0?' — exact':` — écart ${inferenceError>0?'+':''}${inferenceError} px`}`;
-    t+=`<tr><td>${escapeXml(screenName)}</td><td><strong>${start}</strong></td><td>${z}px${measureMode?' ('+zoneRaw.toFixed(2).replace('.',',')+')':''}</td><td>${i===rows.length-1?'—':gp+'px ('+raw.toFixed(2).replace('.',',')+')'}</td></tr>`;
-    real+=z;
+    const totalLength=topHeight+bottomHeight;
+    const width=horizontalBands?totalLength:axis==='X'?z:Math.max(actual20?bandW:0,actual25?bandW25:0);
+    const height=horizontalBands?z:axis==='X'?totalLength:z;
+    const progression=horizontalBands?(axis==='X'?width:height):z;
+    t+=`<tr><td>${escapeXml(screenName)}</td><td><strong>${start}</strong></td><td>${progression}px${measureMode&&!horizontalBands?' ('+zoneRaw.toFixed(2).replace('.',',')+')':''}</td><td>${i===rows.length-1?'—':gp+'px ('+raw.toFixed(2).replace('.',',')+')'}</td></tr>`;
+    real+=progression;
     const zoneBandWidth=profuseMode?crossPixels:Math.max(actual20?bandW:0,actual25?bandW25:0);
-zones.push({index:i+1,name:screenName,groupId:r.dataset.groupId||'',groupName:r.dataset.groupName||'',groupTargetAxis:Number(r.dataset.groupTargetAxis)||0,groupTargetCross:Number(r.dataset.groupTargetCross)||0,pixels:z,start,gapPx:i<rows.length-1?gp:0,gapMm:i<rows.length-1?mm:0,bands:bandCount,count20:actual20,count25:actual25,bandOrder,mixLabel,bandList,bandWidthPx:zoneBandWidth,crossPixels,bandPixelTotal:inferredBandPixels,bandPixelError:inferenceError,sendingCard,port,entrySide,controlLayout,dualControl,topHeight,bottomHeight,totalHeight:topHeight+bottomHeight,portBottom,entrySideBottom});
-    if(i<rows.length-1){start+=z+gp;gaps+=gp;gapMillimeters+=mm}else start+=z;
+zones.push({index:i+1,name:screenName,groupId:r.dataset.groupId||'',groupName:r.dataset.groupName||'',groupTargetAxis:Number(r.dataset.groupTargetAxis)||0,groupTargetCross:Number(r.dataset.groupTargetCross)||0,pixels:progression,stackPixels:z,width,height,horizontalBands,start,gapPx:i<rows.length-1?gp:0,gapMm:i<rows.length-1?mm:0,bands:bandCount,count20:actual20,count25:actual25,bandOrder,mixLabel,bandList,bandWidthPx:zoneBandWidth,crossPixels,bandPixelTotal:inferredBandPixels,bandPixelError:inferenceError,sendingCard,port,entrySide,controlLayout,dualControl,topHeight,bottomHeight,totalHeight:topHeight+bottomHeight,portBottom,entrySideBottom});
+    if(i<rows.length-1){start+=progression+gp;gaps+=gp;gapMillimeters+=mm}else start+=progression;
   });
   if(invalid){
     showCalculationError('Vérifie les mesures : zones et hauteurs doivent être supérieures à 0, et les vides ne peuvent pas être négatifs.'); return;
@@ -1384,8 +1418,8 @@ zones.push({index:i+1,name:screenName,groupId:r.dataset.groupId||'',groupName:r.
   const logical=real+gaps;
   const nonZeroGapCount=zones.filter(z=>z.gapPx>0).length;
   const maxCross=profuseMode?Math.max(...zones.map(z=>z.crossPixels)):profuseCrossAxis;
-  const screenWidth=profuseMode?(axis==='X'?logical:maxCross):(axis==='X'?logical:Math.max(...zones.map(z=>z.bandWidthPx)));
-  const screenHeight=profuseMode?(axis==='X'?maxCross:logical):(axis==='X'?Math.max(...zones.map(z=>z.totalHeight)):logical);
+  const screenWidth=profuseMode?(axis==='X'?logical:maxCross):(axis==='X'?logical:Math.max(...zones.map(z=>z.width)));
+  const screenHeight=profuseMode?(axis==='X'?maxCross:logical):(axis==='X'?Math.max(...zones.map(z=>z.height)):logical);
   document.getElementById('summary').innerHTML=`
     <div>Résolution LED réelle</div><div class="big">${real} px</div>
     <div>Vides non nuls entre les zones : <strong>${nonZeroGapCount}</strong> — ${formatInput(gapMillimeters)} mm — <strong>${gaps} px virtuels</strong></div>
@@ -1488,6 +1522,11 @@ function buildProfuseLayout(c){
 }
 
 
+function sectionBandRect(c,z,offset,pixels,length,sectionOffset){
+  const baseX=c.axis==='X'?z.start:0,baseY=c.axis==='Y'?z.start:0;
+  if(z.horizontalBands)return {x:baseX+sectionOffset,y:baseY+offset,width:length,height:pixels};
+  return {x:baseX+(c.axis==='X'?offset:0),y:baseY+(c.axis==='X'?sectionOffset:offset),width:c.axis==='X'?pixels:z.bandWidthPx,height:c.axis==='X'?length:pixels};
+}
 // Export expérimental du format DSCI / Complex Screen (.scr).
 function buildScrFile(calculation, sourceWidth, sourceHeight){
   const c=calculation, regions=[], chains=new Map();
@@ -1501,18 +1540,15 @@ function buildScrFile(calculation, sourceWidth, sourceHeight){
       const key=z.sendingCard+':'+port, order=chains.get(key)||0;
       chains.set(key,order+1);
       regions.push({sending:z.sendingCard-1,port:port-1,order,
-        gridX:c.axis==='X'?b.gridIndex:gridOffset,gridY:c.axis==='X'?gridOffset:b.gridIndex,
-        x:c.axis==='X'?z.start+b.offset:0,
-        y:c.axis==='X'?yOffset:z.start+b.offset,
-        width:c.axis==='X'?b.pixels:z.bandWidthPx,
-        height:c.axis==='X'?height:b.pixels});
+        gridX:z.horizontalBands?gridOffset:c.axis==='X'?b.gridIndex:gridOffset,gridY:z.horizontalBands?b.gridIndex:c.axis==='X'?gridOffset:b.gridIndex,
+        ...sectionBandRect(c,z,b.offset,b.pixels,height,yOffset)});
     }
   };
   for(const z of c.zones){
-    if(z.controlLayout==='dual'){
+    if(z.dualControl){
       add(z,z.port,z.entrySide,z.topHeight,0,0);
       add(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,1);
-    }else if(z.controlLayout==='single-bottom')add(z,z.port,z.entrySide,z.bottomHeight,0,0);
+    }else if(['single-bottom','single-right'].includes(z.controlLayout))add(z,z.port,z.entrySide,z.bottomHeight,0,0);
     else add(z,z.port,z.entrySide,z.topHeight||c.bandH,0,0);
     physicalColumn+=z.bandList.length;
   }
@@ -1605,14 +1641,14 @@ function renderParameterTables(){
     cableOrder.forEach(b=>{
       const key=`${z.sendingCard}-${port}`;
       const receiving=(counters.get(key)||0)+1;counters.set(key,receiving);
-      result.push({groupId:`${z.index}:${label||'single'}`,name:`${z.name}${label}`,sending:z.sendingCard,port,receiving,startX:c.axis==='X'?z.start+b.physicalOffset:0,startY:c.axis==='X'?yOffset:z.start+b.physicalOffset,width:c.axis==='X'?b.pixels:z.bandWidthPx,height:c.axis==='X'?height:b.pixels});
+      result.push({groupId:`${z.index}:${label||'single'}`,name:`${z.name}${label}`,sending:z.sendingCard,port,receiving,...(()=>{const rect=sectionBandRect(c,z,b.physicalOffset,b.pixels,height,yOffset);return {startX:rect.x,startY:rect.y,width:rect.width,height:rect.height}})()});
     });
   };
   c.zones.forEach(z=>{
-    if(z.controlLayout==='dual'){
-      addSection(z,z.port,z.entrySide,z.topHeight,0,' — haut');
-      addSection(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,' — bas');
-    }else if(z.controlLayout==='single-bottom')addSection(z,z.port,z.entrySide,z.bottomHeight,0,'');
+    if(z.dualControl){
+      addSection(z,z.port,z.entrySide,z.topHeight,0,z.horizontalBands?' — gauche':' — haut');
+      addSection(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,z.horizontalBands?' — droite':' — bas');
+    }else if(['single-bottom','single-right'].includes(z.controlLayout))addSection(z,z.port,z.entrySide,z.bottomHeight,0,'');
     else addSection(z,z.port,z.entrySide,z.topHeight,0,'');
   });
   const axisStarts=result.map(r=>c.axis==='X'?r.startX:r.startY);
@@ -1642,6 +1678,29 @@ function escapeXml(value){
 }
 function isRearView(){return document.getElementById('viewSide').value==='rear'}
 function displayedSide(side){return side}
+function renderScreenDimensions(c,z,x,y,w,h,first){
+  if(!Number.isFinite(c.pitch)||c.pitch<=0)return '';
+  const mm=value=>formatInput(Math.round(value*10)/10)+' mm';
+  const width=z.width??(c.axis==='X'?z.pixels:z.bandWidthPx);
+  const height=z.height??(c.axis==='X'?(z.totalHeight||c.bandH):z.pixels);
+  const stackedMm=(z.count20||0)*200+(z.count25||0)*250;
+  const widthMm=z.horizontalBands?width*c.pitch:c.axis==='X'&&stackedMm?stackedMm:width*c.pitch;
+  const heightMm=z.horizontalBands&&stackedMm?stackedMm:height*c.pitch;
+  let svg='';
+  const line=(a,b,value)=>`<g stroke="#64748b" stroke-width="1.5" fill="none"><path d="M ${a} ${y+h+15} V ${y+h+29} M ${a} ${y+h+22} H ${b} M ${b} ${y+h+15} V ${y+h+29}"/></g><text x="${(a+b)/2}" y="${y+h+42}" text-anchor="middle" fill="#111827" font-size="14">${escapeXml(mm(value))}</text>`;
+  if(z.horizontalBands&&z.dualControl){
+    const join=x+w*z.topHeight/z.totalHeight;
+    svg+=line(x,join,z.topHeight*c.pitch)+line(join,x+w,z.bottomHeight*c.pitch);
+  }else svg+=line(x,x+w,widthMm);
+  // Une cote de hauteur commune évite de répéter les mêmes chiffres entre les écrans.
+  if(first||c.zones.some(other=>(other.height??(c.axis==='X'?(other.totalHeight||c.bandH):other.pixels))!==height)){
+    const dx=first?x-24:x+12,color=first?'#111827':'#f8fafc';
+    const dimension=(a,b,value)=>`<g stroke="${color}" stroke-width="1.5" fill="none"><path d="M ${dx-7} ${a} H ${dx+7} M ${dx} ${a} V ${b} M ${dx-7} ${b} H ${dx+7}"/></g><text x="${dx-8}" y="${(a+b)/2}" text-anchor="middle" fill="${color}" font-size="14" transform="rotate(-90 ${dx-8} ${(a+b)/2})">${escapeXml(mm(value))}</text>`;
+    if(!z.horizontalBands&&z.dualControl){const join=y+h*z.topHeight/z.totalHeight;svg+=dimension(y,join,z.topHeight*c.pitch)+dimension(join,y+h,z.bottomHeight*c.pitch);}
+    else svg+=dimension(y,y+h,heightMm);
+  }
+  return svg;
+}
 function renderDiagramLegacy(){
   if(!lastCalculation)return;
   const c=lastCalculation;
@@ -1651,32 +1710,35 @@ function renderDiagramLegacy(){
   const horizontal=c.axis==='X';
   const viewW=1200, left=100, top=170, drawW=1000, drawH=360, legendRowH=70;
   const legendY=top+drawH+55;
-  const viewH=legendY+c.zones.length*legendRowH+70;
+  const viewH=legendY+c.zones.length*legendRowH+100;
   const scale=Math.min(drawW/Math.max(1,c.screenWidth),drawH/Math.max(1,c.screenHeight));
   const originX=left+(drawW-c.screenWidth*scale)/2;
   const originY=top+(drawH-c.screenHeight*scale)/2;
   const portColors=['#16a34a','#a16207','#9333ea','#ea580c','#db2777','#0d9488','#dc2626','#2563eb','#65a30d','#d97706','#0891b2','#7c3aed','#be123c','#4f46e5','#15803d','#c2410c','#0369a1','#a21caf','#b45309','#0f766e'];
   const colorForConnection=(sending,port)=>portColors[(Math.max(1,Number(port))-1)%portColors.length];
-  let shapes='',labels='',routes='',connectors='',details='';
+  let shapes='',labels='',routes='',connectors='',details='',dimensions='';
   const usedConnections=new Map(),lastOnConnection={};
   c.zones.forEach((z,idx)=>{
     const x=horizontal?originX+z.start*scale:originX;
     const y=horizontal?originY:originY+z.start*scale;
-    const w=horizontal?z.pixels*scale:z.bandWidthPx*scale;
-    const h=horizontal?z.totalHeight*scale:z.pixels*scale;
+    const w=(z.width??(horizontal?z.pixels:z.bandWidthPx))*scale;
+    const h=(z.height??(horizontal?z.totalHeight:z.pixels))*scale;
+    dimensions+=renderScreenDimensions(c,z,x,y,w,h,idx===0);
     shapes+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#153a5b" stroke="#38bdf8" stroke-width="3"/>`;
     let bandOffset=0;
     for(let b=1;b<z.bands;b++){
       bandOffset+=z.bandList[b-1].pixels;
-      const bx=horizontal?x+w*bandOffset/z.pixels:x;
-      const by=horizontal?y:y+h*bandOffset/z.pixels;
-      shapes+=horizontal
+      const bx=!z.horizontalBands&&horizontal?x+w*bandOffset/z.pixels:x;
+      const by=z.horizontalBands?y+bandOffset*scale:horizontal?y:y+h*bandOffset/z.pixels;
+      shapes+=!z.horizontalBands&&horizontal
         ? `<line x1="${bx}" y1="${y}" x2="${bx}" y2="${y+h}" stroke="#64748b" stroke-width="1"/>`
         : `<line x1="${x}" y1="${by}" x2="${x+w}" y2="${by}" stroke="#64748b" stroke-width="1"/>`;
     }
     if(w>=22)labels+=`<text x="${x+w/2}" y="${y+h/2+8}" text-anchor="middle" fill="#fff" font-size="${Math.max(12,Math.min(26,w/3))}" font-weight="700">E${z.index}${w>=(z.dualControl?175:125)?(z.dualControl?' · P'+z.port+'/'+z.portBottom:' · P'+z.port):''}</text>`;
     if(z.dualControl){
       const joinY=y+h*z.topHeight/z.totalHeight;
+      if(z.horizontalBands)shapes+=`<line x1="${x+z.topHeight*scale}" y1="${y}" x2="${x+z.topHeight*scale}" y2="${y+h}" stroke="#f8fafc" stroke-width="3" stroke-dasharray="8 6"/>`;
+      else
       shapes+=`<line x1="${x}" y1="${joinY}" x2="${x+w}" y2="${joinY}" stroke="#f8fafc" stroke-width="3" stroke-dasharray="8 6"/>`;
     }
     const drawCable=(port,side,routeY,labelY,positionLabel)=>{
@@ -1695,11 +1757,22 @@ function renderDiagramLegacy(){
       routes+=`<circle cx="${entryX}" cy="${routeY}" r="12" fill="${color}" stroke="#fff" stroke-width="3"/>`;
       lastOnConnection[connectionKey]={x:exitX,y:routeY};
     };
+    const drawVerticalCable=(port,side,cableX)=>{
+      const key=`${z.sendingCard}-${port}`,color=colorForConnection(z.sendingCard,port);
+      const entryY=side==='right'?y+h:y,exitY=side==='right'?y:y+h;
+      usedConnections.set(key,{sending:z.sendingCard,port});
+      if(lastOnConnection[key]){const previous=lastOnConnection[key];connectors+=`<path d="M ${previous.x} ${previous.y} L ${cableX} ${entryY}" fill="none" stroke="${color}" stroke-width="4" stroke-dasharray="10 7"/>`;}
+      routes+=`<line x1="${cableX}" y1="${entryY}" x2="${cableX}" y2="${exitY}" stroke="${color}" stroke-width="7" marker-end="url(#arrowSC${z.sendingCard}P${port})"/><circle cx="${cableX}" cy="${entryY}" r="12" fill="${color}" stroke="#fff" stroke-width="3"/>`;
+      lastOnConnection[key]={x:cableX,y:exitY};
+    };
     const cableInset=Math.min(22,Math.max(6,h*.12));
-    if(z.dualControl){
+    if(z.horizontalBands){
+      if(z.dualControl){drawVerticalCable(z.port,z.entrySide,x+Math.min(16,w*.1));drawVerticalCable(z.portBottom,z.entrySideBottom,x+w-Math.min(16,w*.1));}
+      else drawVerticalCable(z.port,z.entrySide,z.controlLayout==='single-right'?x+w-Math.min(16,w*.1):x+Math.min(16,w*.1));
+    }else if(z.dualControl){
       drawCable(z.port,z.entrySide,y+cableInset,y+52,'HAUT ↓');
       drawCable(z.portBottom,z.entrySideBottom,y+h-cableInset,y+h-42,'BAS ↑');
-    }else if(z.controlLayout==='single-bottom'){
+    }else if(['single-bottom','single-right'].includes(z.controlLayout)){
       drawCable(z.port,z.entrySide,y+h-cableInset,y+h-48,'BAS ↑');
     }else{
       drawCable(z.port,z.entrySide,y+cableInset,y+h-22,'HAUT ↓');
@@ -1719,14 +1792,14 @@ function renderDiagramLegacy(){
     const gap=z.gapPx>0?`${z.gapPx}px / ${formatInput(z.gapMm)} mm`:'aucun';
     details+=`<circle cx="65" cy="${y+9}" r="8" fill="${colorTop}"/>`;
     if(z.dualControl)details+=`<circle cx="76" cy="${y+9}" r="8" fill="${colorForConnection(z.sendingCard,z.portBottom)}"/>`;
-    details+=`<text x="90" y="${y+15}" fill="#111827" font-size="18" font-weight="700">E${z.index} — ${escapeXml(z.name)} • ${z.mixLabel} • ${z.pixels}px × ${z.totalHeight}px • Start ${c.axis} ${z.start}</text>`;
+    details+=`<text x="90" y="${y+15}" fill="#111827" font-size="18" font-weight="700">E${z.index} — ${escapeXml(z.name)} • ${z.mixLabel} • ${z.width}px × ${z.height}px • Start ${c.axis} ${z.start}</text>`;
     if(z.dualControl){
-      details+=`<text x="90" y="${y+37}" fill="#475569" font-size="15">Double boîtier • haut ${z.topHeight}px ↓ • bas ${z.bottomHeight}px ↑ • total ${z.totalHeight}px</text>`;
-      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">${document.getElementById('multiSending').checked?`SC ${z.sendingCard} • `:''}Haut : port ${z.port}, arrivée visible ${displayedSide(z.entrySide)==='right'?'droite':'gauche'} • Bas : port ${z.portBottom}, arrivée visible ${displayedSide(z.entrySideBottom)==='right'?'droite':'gauche'} • vide : ${gap}</text>`;
+      details+=`<text x="90" y="${y+37}" fill="#475569" font-size="15">Double boîtier • ${z.horizontalBands?'gauche':'haut'} ${z.topHeight}px • ${z.horizontalBands?'droite':'bas'} ${z.bottomHeight}px • total ${z.totalHeight}px</text>`;
+      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">${document.getElementById('multiSending').checked?`SC ${z.sendingCard} • `:''}${z.horizontalBands?'Gauche':'Haut'} : port ${z.port}, arrivée ${z.horizontalBands?(z.entrySide==='right'?'bas':'haut'):(displayedSide(z.entrySide)==='right'?'droite':'gauche')} • ${z.horizontalBands?'Droite':'Bas'} : port ${z.portBottom}, arrivée ${z.horizontalBands?(z.entrySideBottom==='right'?'bas':'haut'):(displayedSide(z.entrySideBottom)==='right'?'droite':'gauche')} • vide : ${gap}</text>`;
     }else{
-      const position=z.controlLayout==='single-bottom'?'bas ↑':'haut ↓';
-      details+=`<text x="90" y="${y+37}" fill="#475569" font-size="15">Boîtier unique en ${position} • hauteur ${z.totalHeight}px</text>`;
-      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">${document.getElementById('multiSending').checked?`SC ${z.sendingCard} • `:''}Port ${z.port} • arrivée visible ${displayedSide(z.entrySide)==='right'?'droite':'gauche'} • vide après : ${gap}</text>`;
+      const position=z.horizontalBands?(z.controlLayout==='single-right'?'droite ←':'gauche →'):z.controlLayout==='single-bottom'?'bas ↑':'haut ↓';
+      details+=`<text x="90" y="${y+37}" fill="#475569" font-size="15">Boîtier unique en ${position} • ${z.horizontalBands?'largeur':'hauteur'} ${z.totalHeight}px</text>`;
+      details+=`<text x="90" y="${y+59}" fill="#475569" font-size="14">${document.getElementById('multiSending').checked?`SC ${z.sendingCard} • `:''}Port ${z.port} • arrivée ${z.horizontalBands?(z.entrySide==='right'?'bas':'haut'):(displayedSide(z.entrySide)==='right'?'droite':'gauche')} • vide après : ${gap}</text>`;
     }
   });
   const markers=[...usedConnections.values()].map(item=>`<marker id="arrowSC${item.sending}P${item.port}" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="${colorForConnection(item.sending,item.port)}"/></marker>`).join('');
@@ -1741,8 +1814,9 @@ function renderDiagramLegacy(){
     ${connectors}
     ${routes}
     ${labels}
+    ${dimensions}
     ${details}
-    <text x="60" y="${legendY+c.zones.length*legendRowH+28}" fill="#475569" font-family="Arial,sans-serif" font-size="16">Même couleur et liaison pointillée : même contrôleur et même port • gris : vide / montant</text>
+    <text x="60" y="${legendY+c.zones.length*legendRowH+28}" fill="#475569" font-family="Arial,sans-serif" font-size="16">Même couleur : même contrôleur et port • gris : vide • cotes mm : bandes nominales 200/250 • longueurs = pixels × pitch</text>
   </svg>`;
   document.getElementById('diagram').innerHTML=svg;
 }
