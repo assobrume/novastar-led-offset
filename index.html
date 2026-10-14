@@ -490,6 +490,8 @@ function serializeZone(row){
     entrySide:controlValue(row,'.entrySide','left'),
     controlLayout:controlValue(row,'.controlLayout','single-top'),
     heightTop:controlValue(row,'.heightTop',''),
+    heightTopUnit:controlValue(row,'.heightTopUnit','px'),
+    heightBottomUnit:controlValue(row,'.heightBottomUnit','px'),
     heightBottom:controlValue(row,'.heightBottom',''),
     rj45PortBottom:controlValue(row,'.rj45PortBottom',''),
     entrySideBottom:controlValue(row,'.entrySideBottom','left')
@@ -510,6 +512,7 @@ function applyZoneData(row,data){
     '.band25Left':'band25Left','.band25Right':'band25Right',
     '.bandOrder':'bandOrder','.sendingCard':'sendingCard','.rj45Port':'rj45Port','.entrySide':'entrySide',
     '.controlLayout':'controlLayout','.heightTop':'heightTop','.heightBottom':'heightBottom',
+    '.heightTopUnit':'heightTopUnit','.heightBottomUnit':'heightBottomUnit',
     '.rj45PortBottom':'rj45PortBottom','.entrySideBottom':'entrySideBottom'
   };
   Object.entries(mapping).forEach(([selector,key])=>setControlValue(row,selector,data[key]));
@@ -836,8 +839,8 @@ function addZone(value,gapBefore=80){
     <div class="bands-extra band-custom novastar-only"><label>Bandes de 25 cm à gauche</label><input class="band25Left" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
     <div class="bands-extra band-custom novastar-only"><label>Bandes de 25 cm à droite</label><input class="band25Right" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
     <div class="novastar-only"><label>Configuration des boîtiers</label><select class="controlLayout"><option value="single-top">Boîtier unique en haut</option><option value="single-bottom">Boîtier unique en bas</option><option value="dual">Boîtiers en haut + en bas</option></select></div>
-    <div class="dual-extra novastar-only"><label>Résolution Y — partie haute (px)</label><input class="heightTop" type="text" value="${defaultTopHeight}" inputmode="numeric" autocomplete="off"></div>
-    <div class="dual-extra novastar-only"><label>Résolution Y — partie basse (px)</label><input class="heightBottom" type="text" value="${defaultBottomHeight}" inputmode="numeric" autocomplete="off"></div>
+    <div class="dual-extra novastar-only"><label>Hauteur — partie haute</label><select class="heightTopUnit" aria-label="Unité de la hauteur de la partie haute"><option value="px">Pixels (px)</option><option value="mm">Mesure (mm)</option></select><input class="heightTop" aria-label="Hauteur de la partie haute" style="margin-top:8px" type="text" value="${defaultTopHeight}" inputmode="decimal" autocomplete="off"><div class="hint heightTopHint"></div></div>
+    <div class="dual-extra novastar-only"><label>Hauteur — partie basse</label><select class="heightBottomUnit" aria-label="Unité de la hauteur de la partie basse"><option value="px">Pixels (px)</option><option value="mm">Mesure (mm)</option></select><input class="heightBottom" aria-label="Hauteur de la partie basse" style="margin-top:8px" type="text" value="${defaultBottomHeight}" inputmode="decimal" autocomplete="off"><div class="hint heightBottomHint"></div></div>
     <div class="dual-extra novastar-only"><div class="converted dualTotal">Hauteur totale : ${defaultTotalHeight} px</div></div>
     <div><label class="gapLabel">Vide après (mm)</label><input class="gapmm" type="text" value="0" inputmode="decimal" autocomplete="off"></div>
     <div class="novastar-only sending-field"><label>Contrôleur / Sending Card</label><input class="sendingCard" type="text" value="1" inputmode="numeric" autocomplete="off"></div>
@@ -866,7 +869,28 @@ function removeZone(b){
     neighbour?.querySelector(focusSelector)?.focus({preventScroll:true});
   });
 }
+function dualHeightPixels(value,unit,pitch){
+  const parsed=parseNumber(value);
+  return unit==='mm'?Math.round(parsed/pitch):parsed;
+}
+function updateDualHeightUnits(row){
+  for(const side of ['Top','Bottom']){
+    const select=row.querySelector('.height'+side+'Unit');
+    select.dataset.previousUnit=select.value;
+    row.querySelector('.height'+side).inputMode=select.value==='mm'?'decimal':'numeric';
+  }
+}
+function changeDualHeightUnit(select){
+  const row=select.closest('.row3'),side=select.classList.contains('heightTopUnit')?'Top':'Bottom';
+  const old=select.dataset.previousUnit||'px',unit=select.value;
+  const input=row.querySelector('.height'+side),value=parseNumber(input.value),pitch=parseNumber(document.getElementById('pitch').value);
+  if(old!==unit&&input.value.trim()&&Number.isFinite(value)&&Number.isFinite(pitch)&&pitch>0){
+    input.value=formatInput(unit==='mm'?value*pitch:Math.round(value/pitch));
+  }
+  updateDualHeightUnits(row);
+}
 function updateControlLayout(row){
+  updateDualHeightUnits(row);
   const layout=row.querySelector('.controlLayout').value;
   row.dataset.controlLayout=layout;
   const dual=layout==='dual';
@@ -1308,8 +1332,11 @@ function calculate(){
     const entrySide=r.querySelector('.entrySide').value;
     const controlLayout=profuseMode?'single-top':r.querySelector('.controlLayout').value;
     const dualControl=controlLayout==='dual';
-    const topHeight=profuseMode?profuseCrossAxis:dualControl?parseNumber(r.querySelector('.heightTop').value):controlLayout==='single-top'?bandH:0;
-    const bottomHeight=profuseMode?0:dualControl?parseNumber(r.querySelector('.heightBottom').value):controlLayout==='single-bottom'?bandH:0;
+    const topHeight=profuseMode?profuseCrossAxis:dualControl?dualHeightPixels(r.querySelector('.heightTop').value,r.querySelector('.heightTopUnit').value,pitch):controlLayout==='single-top'?bandH:0;
+    const bottomHeight=profuseMode?0:dualControl?dualHeightPixels(r.querySelector('.heightBottom').value,r.querySelector('.heightBottomUnit').value,pitch):controlLayout==='single-bottom'?bandH:0;
+    for(const [side,pixels] of [['Top',topHeight],['Bottom',bottomHeight]]){
+      r.querySelector('.height'+side+'Hint').textContent=dualControl&&r.querySelector('.height'+side+'Unit').value==='mm'&&Number.isFinite(pixels)?`${pixels} px calculés avec le pitch ${formatInput(pitch)} mm`:'';
+    }
     const portBottom=dualControl?parseInt(r.querySelector('.rj45PortBottom').value,10):null;
     const entrySideBottom=dualControl?r.querySelector('.entrySideBottom').value:null;
     r.querySelector('.dualTotal').textContent=dualControl&&Number.isFinite(topHeight)&&Number.isFinite(bottomHeight)?`Hauteur totale : ${topHeight+bottomHeight} px`:'';
@@ -1891,6 +1918,7 @@ document.getElementById('zones').addEventListener('input',event=>{
   calculate();
 });
 document.getElementById('zones').addEventListener('change',event=>{
+  if(event.target.matches('.heightTopUnit,.heightBottomUnit'))changeDualHeightUnit(event.target);
   if(event.target.classList.contains('controlLayout'))updateControlLayout(event.target.closest('.row3'));
   calculate();
 });
