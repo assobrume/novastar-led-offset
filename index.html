@@ -100,6 +100,7 @@
     .bands-mode .row3:not([data-band-order="custom"]) .band-custom{display:none}
     .profuse-only{display:none}
     .profuse-mode .novastar-only{display:none!important}
+    .row3:is([data-control-layout="dual"],[data-control-layout="dual-horizontal"]) .single-length-field{display:none}
     .dual-extra{display:none}
     .row3:is([data-control-layout="dual"],[data-control-layout="dual-horizontal"]) .dual-extra{display:block}
     .beta-badge{display:inline-block;margin-left:7px;padding:3px 7px;border-radius:999px;background:#f59e0b;color:#111827;font-size:.72rem;vertical-align:middle}
@@ -478,6 +479,7 @@ function serializeZone(row){
     groupId:row.dataset.groupId||'',groupName:row.dataset.groupName||'',
     groupTargetAxis:row.dataset.groupTargetAxis||'',groupTargetCross:row.dataset.groupTargetCross||'',
     zonevalue:controlValue(row,'.zonevalue'),
+    bandLengthOverride:controlValue(row,'.bandLengthOverride',''),
     profuseCross:controlValue(row,'.profuseZoneCross'),
     zonevalue25:controlValue(row,'.zonevalue25','0'),
     band25Left:controlValue(row,'.band25Left','0'),
@@ -508,6 +510,7 @@ function applyZoneData(row,data){
   row.dataset.groupTargetCross=data.groupTargetCross||'';
   const mapping={
     '.screenName':'screenName','.zonevalue':'zonevalue','.zonevalue25':'zonevalue25',
+    '.bandLengthOverride':'bandLengthOverride',
     '.profuseZoneCross':'profuseCross',
     '.band25Left':'band25Left','.band25Right':'band25Right',
     '.bandOrder':'bandOrder','.sendingCard':'sendingCard','.rj45Port':'rj45Port','.entrySide':'entrySide',
@@ -844,6 +847,7 @@ function addZone(value,gapBefore=80){
     <div class="screen-name-field"><label class="screenNameLabel">${profuseMode?'Nom de la zone':'Nom de l’écran'}</label><input class="screenName" type="text" value="${profuseMode?'Zone':'Écran'} ${defaultNameNumber}" maxlength="40" autocomplete="off"></div>
     <div><label class="zoneLabel">Zone ${number} — ${currentUnit}</label><input class="zonevalue" type="text" value="${formatInput(value)}" inputmode="decimal" autocomplete="off"><div class="converted"></div><div class="zone-size-alert profuse-only" role="status"></div></div>
     <div class="profuse-only"><label class="profuseZoneCrossLabel">Hauteur de cette zone (px)</label><input class="profuseZoneCross" type="text" inputmode="numeric" autocomplete="off"><div class="hint">Facultatif : vide = dimension par défaut.</div></div>
+    <div class="novastar-only single-length-field"><label>Longueur des bandes de cet écran (px)</label><input class="bandLengthOverride" type="text" inputmode="numeric" autocomplete="off" placeholder="${document.getElementById('bandHeight').value} px par défaut"><div class="hint">Facultatif : vide = longueur globale.</div></div>
     <div class="bands-extra band25-total novastar-only"><label>Bandes de 25 cm</label><input class="zonevalue25" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
     <div class="bands-extra novastar-only"><label>Placement des bandes</label><select class="bandOrder"><option value="20-25">20 cm à gauche • 25 cm à droite</option><option value="25-20">25 cm à gauche • 20 cm à droite</option><option value="custom">Personnalisé • 20 cm au milieu</option></select></div>
     <div class="bands-extra band-custom novastar-only"><label>Bandes de 25 cm à gauche</label><input class="band25Left" type="text" value="0" inputmode="numeric" autocomplete="off"></div>
@@ -1265,6 +1269,28 @@ function updateAppMode(convertBands=true,preserveGeometry=false){
       row.querySelector('.profuseZoneCross').value=String(c.axis==='X'?size.height:size.width);
     });
   }
+  if(preserveGeometry&&!profuse&&lastCalculation?.appMode==='profuse'){
+    const c=lastCalculation;
+    document.getElementById('inputMode').value='px';previousMode='px';
+    document.body.classList.remove('bands-mode');
+    document.querySelectorAll('.row3').forEach((row,i)=>{
+      const z=c.zones[i];if(!z)return;
+      const size=quickZoneDimensions(c,z);
+      const layout=row.querySelector('.controlLayout')?.value||'single-top';
+      const horizontalBands=['single-left','single-right','dual-horizontal'].includes(layout);
+      row.querySelector('.zonevalue').value=String(horizontalBands?size.height:c.axis==='X'?size.width:size.height);
+      const length=horizontalBands?size.width:size.height;
+      if(layout==='dual'||layout==='dual-horizontal'){
+        const oldTop=dualHeightPixels(row.querySelector('.heightTop').value,row.querySelector('.heightTopUnit').value,c.pitch);
+        const oldBottom=dualHeightPixels(row.querySelector('.heightBottom').value,row.querySelector('.heightBottomUnit').value,c.pitch);
+        const ratio=Number.isFinite(oldTop+oldBottom)&&oldTop+oldBottom>0?oldTop/(oldTop+oldBottom):.5;
+        const first=Math.max(1,Math.min(length-1,Math.round(length*ratio)));
+        row.querySelector('.heightTopUnit').value='px';row.querySelector('.heightBottomUnit').value='px';
+        row.querySelector('.heightTop').value=String(first);row.querySelector('.heightBottom').value=String(length-first);
+        updateControlLayout(row);
+      }else if(horizontalBands||c.axis==='X')row.querySelector('.bandLengthOverride').value=String(length);
+    });
+  }
   document.body.classList.toggle('profuse-mode',profuse);
   const bandOption=document.querySelector('#inputMode option[value="bands"]');
   bandOption.disabled=profuse;
@@ -1417,6 +1443,9 @@ function calculate(){
     const entered=parseNumber(r.querySelector('.zonevalue').value);
     const customCross=r.querySelector('.profuseZoneCross').value.trim();
     const crossPixels=profuseMode&&customCross?parseNumber(customCross):profuseCrossAxis;
+    const lengthInput=r.querySelector('.bandLengthOverride').value.trim();
+    const zoneBandH=lengthInput?parseNumber(lengthInput):bandH;
+    if(!Number.isInteger(zoneBandH)||zoneBandH<=0||zoneBandH>65535){invalid=true;return;}
     const entered25=parseNumber(r.querySelector('.zonevalue25').value);
     const mm=parseNumber(r.querySelector('.gapmm').value);
     const sendingCard=document.getElementById('multiSending').checked?Math.max(1,Math.round(parseNumber(r.querySelector('.sendingCard').value)||1)):1;
@@ -1426,8 +1455,8 @@ function calculate(){
     const controlLayout=profuseMode?'single-top':r.querySelector('.controlLayout').value;
     const horizontalBands=['single-left','single-right','dual-horizontal'].includes(controlLayout);
     const dualControl=controlLayout==='dual'||controlLayout==='dual-horizontal';
-    const topHeight=profuseMode?profuseCrossAxis:dualControl?dualHeightPixels(r.querySelector('.heightTop').value,r.querySelector('.heightTopUnit').value,pitch):['single-top','single-left'].includes(controlLayout)?bandH:0;
-    const bottomHeight=profuseMode?0:dualControl?dualHeightPixels(r.querySelector('.heightBottom').value,r.querySelector('.heightBottomUnit').value,pitch):['single-bottom','single-right'].includes(controlLayout)?bandH:0;
+    const topHeight=profuseMode?profuseCrossAxis:dualControl?dualHeightPixels(r.querySelector('.heightTop').value,r.querySelector('.heightTopUnit').value,pitch):['single-top','single-left'].includes(controlLayout)?zoneBandH:0;
+    const bottomHeight=profuseMode?0:dualControl?dualHeightPixels(r.querySelector('.heightBottom').value,r.querySelector('.heightBottomUnit').value,pitch):['single-bottom','single-right'].includes(controlLayout)?zoneBandH:0;
     for(const [side,pixels] of [['Top',topHeight],['Bottom',bottomHeight]]){
       r.querySelector('.height'+side+'Hint').textContent=dualControl&&r.querySelector('.height'+side+'Unit').value==='mm'&&Number.isFinite(pixels)?`${pixels} px calculés avec le pitch ${formatInput(pitch)} mm`:'';
     }

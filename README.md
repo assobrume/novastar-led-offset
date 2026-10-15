@@ -20,6 +20,10 @@ La conversion face/arrière est volontaire. Elle transforme les côtés et l’o
 
 Les exports SVG et PNG gardent un fond blanc.
 
+## Passage entre les modes
+
+Le passage complet → rapide → complet conserve les dimensions X/Y. Au retour dans le mode complet, la saisie passe en pixels. Pour les doubles boîtiers, le total est réparti selon la proportion des deux parties. Pour un boîtier unique, le champ facultatif « Longueur des bandes de cet écran (px) » permet de conserver une longueur différente du réglage global. Les pixels de l’axe transversal doivent toujours correspondre aux bandes réellement installées pour un export SCR exact.
+
 ## Sauvegardes
 
 Le brouillon et les configurations nommées sont stockés dans le navigateur. Ils ne sont pas synchronisés entre appareils. La dernière saisie est enregistrée au masquage ou à la fermeture de la page, sous réserve que le navigateur permette le stockage.
@@ -49,3 +53,5 @@ Boîtier haut, bas, haut + bas, gauche, droite ou gauche + droite. Les configura
 Avec deux boîtiers horizontaux sur le même port et des entrées opposées, le chemin part de l’entrée supérieure puis relie la sortie basse à l’entrée basse de l’autre côté. En miroir, cette liaison reste en bas.
 
 **Limite connue :** les bandes verticales avec deux boîtiers sur l’axe Y ne sont pas prises en charge pour le tableau NovaLCT et le SCR. L’export est bloqué afin d’éviter des cartes superposées. Utiliser l’axe X pour cette configuration. Cette limite ne concerne pas les zones Y du mode rapide ni les bandes horizontales sur Y.
+
+Vérification complémentaire : 63 aller-retour de mode dans les scénarios complets, contrôle des dimensions à chaque étape, modification en mode rapide et conservation au retour et après rechargement de configuration. Cas reproduit : 373 × 576 px reste 373 × 576 px.
