@@ -157,7 +157,7 @@
     <div class="grid">
       <div>
         <label>Utilisation</label>
-        <select id="appMode"><option value="complete">Mode complet NovaStar</option><option value="profuse">Mode rapide Profuse</option></select>
+        <select id="appMode"><option value="complete">Mode complet NovaStar</option><option value="profuse">Mode rapide</option></select>
       </div>
       <div>
         <label>Pitch LED (mm)</label>
@@ -558,7 +558,7 @@ function resetProject(){
   try{
     applyConfiguration({schemaVersion:1,variant:APP_VARIANT,appMode:mode,
       configName:'',multiSending:false,pitch:'3,9',axis:'X',inputMode:'mm',
-      diagramTitle:mode==='profuse'?'Zones Profuse':'Écran LED transparent',
+      diagramTitle:mode==='profuse'?'Zones LED':'Écran LED transparent',
       viewSide:'front',orientationTransformsData:true,profuseCrossAxis:'454',
       bandWidth:'50',bandWidth25:'64',bandHeight:'454',scrSourceWidth:'1920',scrSourceHeight:'1080',
       zones:[{screenName:mode==='profuse'?'Zone 1':'Écran 1',zonevalue:'',gapmm:'0',
@@ -591,7 +591,7 @@ function applyConfiguration(data,silent=false){
   document.getElementById('multiSending').checked=data.multiSending??data.zones.some(zone=>Number(zone.sendingCard)>1);
   document.getElementById('axis').value=data.axis??'X';
   document.getElementById('inputMode').value=data.inputMode??'mm';
-  document.getElementById('diagramTitle').value=data.diagramTitle??'Écran LED transparent';
+  document.getElementById('diagramTitle').value=(data.diagramTitle==='Zones Profuse'?'Zones LED':data.diagramTitle)??'Écran LED transparent';
   document.getElementById('viewSide').value=data.orientationTransformsData?(data.viewSide??'front'):'front';
   document.getElementById('profuseCrossAxis').value=data.profuseCrossAxis??data.bandHeight??'454';
   document.getElementById('bandWidth').value=data.bandWidth??'50';
@@ -1244,13 +1244,13 @@ function updateAppMode(convertBands=true){
     document.getElementById('inputMode').value='px';
     updateMode();
   }
-  document.getElementById('diagramHeading').textContent=profuse?'Schéma des zones Profuse':'Schéma Complex Screen';
+  document.getElementById('diagramHeading').textContent=profuse?'Schéma des zones':'Schéma Complex Screen';
   document.getElementById('diagramHint').textContent=profuse
-    ? 'Vue simplifiée des zones, des vides et des Start X/Y à reporter dans Profuse.'
+    ? 'Vue simplifiée des zones, des vides et des coordonnées Start X/Y.'
     : 'Le schéma reprend automatiquement les zones, les vides et les Start X/Y calculés.';
   if(profuse)document.getElementById('zoneHint').textContent='Indique uniquement la mesure ou la résolution de chaque zone et la largeur du vide situé après.';
   document.getElementById('orderHint').innerHTML=profuse
-    ? '<strong>Ordre Profuse :</strong> réorganise les zones dans l’ordre de lecture du contenu.'
+    ? '<strong>Ordre des zones :</strong> réorganise les zones dans l’ordre de lecture du contenu.'
     : '<strong>Ordre du schéma : vue de face de l’écran.</strong> Passe en mode réorganisation pour déplacer facilement les écrans de gauche à droite.';
   document.querySelectorAll('.screenNameLabel').forEach(label=>label.textContent=profuse?'Nom de la zone':'Nom de l’écran');
   document.querySelectorAll('.row3').forEach((row,i)=>{
@@ -1424,7 +1424,7 @@ zones.push({index:i+1,name:screenName,groupId:r.dataset.groupId||'',groupName:r.
     <div>Résolution LED réelle</div><div class="big">${real} px</div>
     <div>Vides non nuls entre les zones : <strong>${nonZeroGapCount}</strong> — ${formatInput(gapMillimeters)} mm — <strong>${gaps} px virtuels</strong></div>
     <div>Résolution logique sur l’axe ${axis} : <strong>${logical} px</strong></div>
-    <div>${profuseMode?'Format du média Profuse':'Format du schéma'} : <strong>${screenWidth} × ${screenHeight} px</strong></div>`;
+    <div>${profuseMode?'Format du média':'Format du schéma'} : <strong>${screenWidth} × ${screenHeight} px</strong></div>`;
   document.getElementById('table').innerHTML=t;
   lastCalculation={axis,pitch,real,gaps,logical,zones,bandW,bandW25,bandH,screenWidth,screenHeight,profuseCrossAxis};
   renderParameterTables();
@@ -1522,6 +1522,9 @@ function buildProfuseLayout(c){
 }
 
 
+function horizontalLinkStartsRight(z){
+  return z.horizontalBands&&z.dualControl&&z.port===z.portBottom&&z.entrySide==='right'&&z.entrySideBottom==='left';
+}
 function sectionBandRect(c,z,offset,pixels,length,sectionOffset){
   const baseX=c.axis==='X'?z.start:0,baseY=c.axis==='Y'?z.start:0;
   if(z.horizontalBands)return {x:baseX+sectionOffset,y:baseY+offset,width:length,height:pixels};
@@ -1546,8 +1549,13 @@ function buildScrFile(calculation, sourceWidth, sourceHeight){
   };
   for(const z of c.zones){
     if(z.dualControl){
-      add(z,z.port,z.entrySide,z.topHeight,0,0);
-      add(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,1);
+      if(horizontalLinkStartsRight(z)){
+        add(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,1);
+        add(z,z.port,z.entrySide,z.topHeight,0,0);
+      }else{
+        add(z,z.port,z.entrySide,z.topHeight,0,0);
+        add(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,1);
+      }
     }else if(['single-bottom','single-right'].includes(z.controlLayout))add(z,z.port,z.entrySide,z.bottomHeight,0,0);
     else add(z,z.port,z.entrySide,z.topHeight||c.bandH,0,0);
     physicalColumn+=z.bandList.length;
@@ -1646,8 +1654,13 @@ function renderParameterTables(){
   };
   c.zones.forEach(z=>{
     if(z.dualControl){
-      addSection(z,z.port,z.entrySide,z.topHeight,0,z.horizontalBands?' — gauche':' — haut');
-      addSection(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,z.horizontalBands?' — droite':' — bas');
+      if(horizontalLinkStartsRight(z)){
+        addSection(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,' — droite');
+        addSection(z,z.port,z.entrySide,z.topHeight,0,' — gauche');
+      }else{
+        addSection(z,z.port,z.entrySide,z.topHeight,0,z.horizontalBands?' — gauche':' — haut');
+        addSection(z,z.portBottom,z.entrySideBottom,z.bottomHeight,z.topHeight,z.horizontalBands?' — droite':' — bas');
+      }
     }else if(['single-bottom','single-right'].includes(z.controlLayout))addSection(z,z.port,z.entrySide,z.bottomHeight,0,'');
     else addSection(z,z.port,z.entrySide,z.topHeight,0,'');
   });
@@ -1678,6 +1691,22 @@ function escapeXml(value){
 }
 function isRearView(){return document.getElementById('viewSide').value==='rear'}
 function displayedSide(side){return side}
+function buildPhysicalScreenLayout(c){
+  const pitch=Number.isFinite(c.pitch)&&c.pitch>0?c.pitch:1;
+  let cursor=0;
+  const zones=c.zones.map(z=>{
+    const pixelWidth=z.width??(c.axis==='X'?z.pixels:z.bandWidthPx);
+    const pixelHeight=z.height??(c.axis==='X'?(z.totalHeight||c.bandH):z.pixels);
+    const stacked=(z.count20||0)*200+(z.count25||0)*250;
+    const width=z.horizontalBands?pixelWidth*pitch:c.axis==='X'&&stacked?stacked:pixelWidth*pitch;
+    const height=z.horizontalBands&&stacked?stacked:pixelHeight*pitch;
+    const x=c.axis==='X'?cursor:0,y=c.axis==='Y'?cursor:0;
+    const gap=Number.isFinite(z.gapMm)?z.gapMm:(z.gapPx||0)*pitch;
+    cursor+=(c.axis==='X'?width:height)+gap;
+    return {x,y,width,height,gap};
+  });
+  return {zones,width:Math.max(1,...zones.map(z=>z.x+z.width)),height:Math.max(1,...zones.map(z=>z.y+z.height))};
+}
 function renderScreenDimensions(c,z,x,y,w,h,first){
   if(!Number.isFinite(c.pitch)||c.pitch<=0)return '';
   const mm=value=>formatInput(Math.round(value*10)/10)+' mm';
@@ -1711,25 +1740,25 @@ function renderDiagramLegacy(){
   const viewW=1200, left=100, top=170, drawW=1000, drawH=360, legendRowH=70;
   const legendY=top+drawH+55;
   const viewH=legendY+c.zones.length*legendRowH+100;
-  const scale=Math.min(drawW/Math.max(1,c.screenWidth),drawH/Math.max(1,c.screenHeight));
-  const originX=left+(drawW-c.screenWidth*scale)/2;
-  const originY=top+(drawH-c.screenHeight*scale)/2;
+  const physical=buildPhysicalScreenLayout(c);
+  const scale=Math.min(drawW/physical.width,drawH/physical.height);
+  const originX=left+(drawW-physical.width*scale)/2;
+  const originY=top+(drawH-physical.height*scale)/2;
   const portColors=['#16a34a','#a16207','#9333ea','#ea580c','#db2777','#0d9488','#dc2626','#2563eb','#65a30d','#d97706','#0891b2','#7c3aed','#be123c','#4f46e5','#15803d','#c2410c','#0369a1','#a21caf','#b45309','#0f766e'];
   const colorForConnection=(sending,port)=>portColors[(Math.max(1,Number(port))-1)%portColors.length];
   let shapes='',labels='',routes='',connectors='',details='',dimensions='';
   const usedConnections=new Map(),lastOnConnection={};
   c.zones.forEach((z,idx)=>{
-    const x=horizontal?originX+z.start*scale:originX;
-    const y=horizontal?originY:originY+z.start*scale;
-    const w=(z.width??(horizontal?z.pixels:z.bandWidthPx))*scale;
-    const h=(z.height??(horizontal?z.totalHeight:z.pixels))*scale;
+    const rect=physical.zones[idx];
+    const x=originX+rect.x*scale,y=originY+rect.y*scale;
+    const w=rect.width*scale,h=rect.height*scale;
     dimensions+=renderScreenDimensions(c,z,x,y,w,h,idx===0);
     shapes+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="5" fill="#153a5b" stroke="#38bdf8" stroke-width="3"/>`;
     let bandOffset=0;
     for(let b=1;b<z.bands;b++){
-      bandOffset+=z.bandList[b-1].pixels;
-      const bx=!z.horizontalBands&&horizontal?x+w*bandOffset/z.pixels:x;
-      const by=z.horizontalBands?y+bandOffset*scale:horizontal?y:y+h*bandOffset/z.pixels;
+      bandOffset+=(z.horizontalBands||horizontal)?(z.bandList[b-1].size?z.bandList[b-1].size*10:z.bandList[b-1].pixels*(c.pitch||1)):z.bandList[b-1].pixels*(c.pitch||1);
+      const bx=!z.horizontalBands&&horizontal?x+bandOffset*scale:x;
+      const by=z.horizontalBands?y+bandOffset*scale:horizontal?y:y+bandOffset*scale;
       shapes+=!z.horizontalBands&&horizontal
         ? `<line x1="${bx}" y1="${y}" x2="${bx}" y2="${y+h}" stroke="#64748b" stroke-width="1"/>`
         : `<line x1="${x}" y1="${by}" x2="${x+w}" y2="${by}" stroke="#64748b" stroke-width="1"/>`;
@@ -1737,7 +1766,7 @@ function renderDiagramLegacy(){
     if(w>=22)labels+=`<text x="${x+w/2}" y="${y+h/2+8}" text-anchor="middle" fill="#fff" font-size="${Math.max(12,Math.min(26,w/3))}" font-weight="700">E${z.index}${w>=(z.dualControl?175:125)?(z.dualControl?' · P'+z.port+'/'+z.portBottom:' · P'+z.port):''}</text>`;
     if(z.dualControl){
       const joinY=y+h*z.topHeight/z.totalHeight;
-      if(z.horizontalBands)shapes+=`<line x1="${x+z.topHeight*scale}" y1="${y}" x2="${x+z.topHeight*scale}" y2="${y+h}" stroke="#f8fafc" stroke-width="3" stroke-dasharray="8 6"/>`;
+      if(z.horizontalBands)shapes+=`<line x1="${x+w*z.topHeight/z.totalHeight}" y1="${y}" x2="${x+w*z.topHeight/z.totalHeight}" y2="${y+h}" stroke="#f8fafc" stroke-width="3" stroke-dasharray="8 6"/>`;
       else
       shapes+=`<line x1="${x}" y1="${joinY}" x2="${x+w}" y2="${joinY}" stroke="#f8fafc" stroke-width="3" stroke-dasharray="8 6"/>`;
     }
@@ -1767,7 +1796,11 @@ function renderDiagramLegacy(){
     };
     const cableInset=Math.min(22,Math.max(6,h*.12));
     if(z.horizontalBands){
-      if(z.dualControl){drawVerticalCable(z.port,z.entrySide,x+Math.min(16,w*.1));drawVerticalCable(z.portBottom,z.entrySideBottom,x+w-Math.min(16,w*.1));}
+      if(z.dualControl){
+        const leftCable=()=>drawVerticalCable(z.port,z.entrySide,x+Math.min(16,w*.1));
+        const rightCable=()=>drawVerticalCable(z.portBottom,z.entrySideBottom,x+w-Math.min(16,w*.1));
+        if(horizontalLinkStartsRight(z)){rightCable();leftCable();}else{leftCable();rightCable();}
+      }
       else drawVerticalCable(z.port,z.entrySide,z.controlLayout==='single-right'?x+w-Math.min(16,w*.1):x+Math.min(16,w*.1));
     }else if(z.dualControl){
       drawCable(z.port,z.entrySide,y+cableInset,y+52,'HAUT ↓');
@@ -1780,8 +1813,8 @@ function renderDiagramLegacy(){
     if(z.gapPx>0){
       const gx=horizontal?x+w:originX;
       const gy=horizontal?originY:y+h;
-      const gw=horizontal?z.gapPx*scale:c.screenWidth*scale;
-      const gh=horizontal?c.screenHeight*scale:z.gapPx*scale;
+      const gw=horizontal?rect.gap*scale:physical.width*scale;
+      const gh=horizontal?physical.height*scale:rect.gap*scale;
       shapes+=`<rect x="${gx}" y="${gy}" width="${gw}" height="${gh}" fill="#334155" opacity=".75"/>`;
       labels+=`<text x="${gx+gw/2}" y="${gy+gh/2}" text-anchor="middle" fill="#fbbf24" font-size="17" transform="${horizontal?`rotate(-90 ${gx+gw/2} ${gy+gh/2})`:''}">VIDE ${z.gapPx}px</text>`;
     }
@@ -1816,7 +1849,7 @@ function renderDiagramLegacy(){
     ${labels}
     ${dimensions}
     ${details}
-    <text x="60" y="${legendY+c.zones.length*legendRowH+28}" fill="#475569" font-family="Arial,sans-serif" font-size="16">Même couleur : même contrôleur et port • gris : vide • cotes mm : bandes nominales 200/250 • longueurs = pixels × pitch</text>
+    <text x="60" y="${legendY+c.zones.length*legendRowH+28}" fill="#475569" font-family="Arial,sans-serif" font-size="16">Échelle en mm • bandes nominales 200/250 mm • longueurs = pixels × pitch • gris : vide</text>
   </svg>`;
   document.getElementById('diagram').innerHTML=svg;
 }
@@ -1904,7 +1937,7 @@ function renderProfuseDiagram(){
   const c=lastCalculation;
   const layout=buildProfuseLayout(c);
   const rear=isRearView();
-  const title=document.getElementById('diagramTitle').value.trim()||'Zones Profuse';
+  const title=document.getElementById('diagramTitle').value.trim()||'Zones LED';
   const viewW=1200,drawLeft=100,drawTop=155,drawMaxW=1000,drawMaxH=500,legendRowH=58;
   const scale=Math.min(drawMaxW/Math.max(1,layout.totalWidth),drawMaxH/Math.max(1,layout.totalHeight));
   const drawnW=layout.totalWidth*scale,drawnH=layout.totalHeight*scale;
@@ -1942,7 +1975,7 @@ function renderProfuseDiagram(){
   const svg=`<svg id="screenDiagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewW} ${viewH}">
     <rect width="${viewW}" height="${viewH}" fill="#ffffff"/>
     <text x="60" y="65" fill="#111827" font-family="Arial,sans-serif" font-size="34" font-weight="700">${escapeXml(title)}</text>
-    <text x="60" y="105" fill="#475569" font-family="Arial,sans-serif" font-size="20">MODE PROFUSE • ${rear?'VUE ARRIÈRE':'VUE DE FACE'} • média étendu ${layout.totalWidth} × ${layout.totalHeight}px</text>
+    <text x="60" y="105" fill="#475569" font-family="Arial,sans-serif" font-size="20">MODE RAPIDE • ${rear?'VUE ARRIÈRE':'VUE DE FACE'} • média étendu ${layout.totalWidth} × ${layout.totalHeight}px</text>
     <text x="60" y="132" fill="#64748b" font-family="Arial,sans-serif" font-size="16">Vue à l’échelle • coordonnées de programmation conservées en vue de face</text>
     <rect x="${originX}" y="${originY}" width="${drawnW}" height="${drawnH}" fill="none" stroke="#111827" stroke-width="2" stroke-dasharray="8 5"/>
     ${shapes}${groupFrames}${labels}${details}
