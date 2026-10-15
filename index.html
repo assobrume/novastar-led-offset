@@ -581,6 +581,11 @@ function applyConfiguration(data,silent=false){
   if(!data||data.schemaVersion!==1||!Array.isArray(data.zones)||!data.zones.length||!data.zones.every(zone=>zone&&typeof zone==='object'&&!Array.isArray(zone))){
     if(!silent)alert('Ce fichier de configuration est invalide.');return false;
   }
+  if((data.appMode!==undefined&&!['complete','profuse'].includes(data.appMode))||
+    (data.axis!==undefined&&!['X','Y'].includes(data.axis))||
+    (data.inputMode!==undefined&&!['mm','px','bands'].includes(data.inputMode))){
+    if(!silent)alert('Cette configuration contient un mode, un axe ou une unité invalide.');return false;
+  }
   if(data.variant&&data.variant!==APP_VARIANT&&data.variant!=='stable'){
     if(!silent)alert('Cette configuration appartient à une autre version de l’application.');return false;
   }
@@ -807,6 +812,11 @@ function scheduleDraftSave(){
   clearTimeout(draftTimer);
   draftTimer=setTimeout(()=>{try{localStorage.setItem(DRAFT_STORAGE_KEY,JSON.stringify(collectConfiguration()))}catch{}},300);
 }
+window.addEventListener('pagehide',()=>{
+  if(!appReady||loadingConfiguration)return;
+  clearTimeout(draftTimer);
+  try{localStorage.setItem(DRAFT_STORAGE_KEY,JSON.stringify(collectConfiguration()))}catch{}
+});
 function restoreDraft(){
   try{const data=JSON.parse(localStorage.getItem(DRAFT_STORAGE_KEY)||'null');return data?applyConfiguration(data,true):false}catch{return false}
 }
@@ -1281,6 +1291,21 @@ function updateAppMode(convertBands=true,preserveGeometry=false){
   updateOrientationHint();
   calculate();
 }
+function updateZoneDimensionLabels(){
+  const quick=document.getElementById('appMode').value==='profuse';
+  const axis=document.getElementById('axis').value;
+  const mode=document.getElementById('inputMode').value;
+  document.querySelectorAll('.row3').forEach(row=>{
+    const layout=row.querySelector('.controlLayout')?.value||'single-top';
+    const horizontalBands=['single-left','single-right','dual-horizontal'].includes(layout);
+    const label=row.querySelector('.zoneLabel');
+    if(mode==='bands'&&!quick)label.textContent='Nombre de bandes de 20 cm';
+    else{
+      const dimension=quick?(axis==='X'?'Largeur de la zone':'Hauteur de la zone'):horizontalBands?'Hauteur empilée des bandes':axis==='X'?'Largeur de l’écran':'Hauteur de l’écran';
+      label.textContent=`${dimension} (${mode==='mm'?'mm':'px'})`;
+    }
+  });
+}
 function updateProfuseDimensionLabels(){
   const dimension=document.getElementById('axis').value==='X'?'Hauteur':'Largeur';
   document.getElementById('profuseCrossLabel').textContent=`${dimension} par défaut des zones (px)`;
@@ -1343,6 +1368,7 @@ function updateMode(){
   calculate();
 }
 function calculate(){
+  updateZoneDimensionLabels();
   document.getElementById('scrExportStatus').textContent='';
   const pitch=parseNumber(document.getElementById('pitch').value);
   const axis=document.getElementById('axis').value;
@@ -1359,12 +1385,34 @@ function calculate(){
   if(!Number.isFinite(pitch)||pitch<=0){
     showCalculationError('Entre un pitch valide supérieur à 0.'); return;
   }
-  if((!profuseMode&&(!Number.isFinite(bandW)||bandW<=0||!Number.isFinite(bandW25)||bandW25<=0||!Number.isFinite(bandH)||bandH<=0))||(profuseMode&&(!Number.isFinite(profuseCrossAxis)||profuseCrossAxis<=0))){
-    showCalculationError(profuseMode?'Entre une dimension commune valide supérieure à 0.':'Entre des résolutions valides pour les bandes de 20 cm, 25 cm et pour leur hauteur.'); return;
+  if((!profuseMode&&(!Number.isInteger(bandW)||bandW<=0||bandW>65535||!Number.isInteger(bandW25)||bandW25<=0||bandW25>65535||!Number.isInteger(bandH)||bandH<=0||bandH>65535))||(profuseMode&&(!Number.isFinite(profuseCrossAxis)||profuseCrossAxis<=0))){
+    showCalculationError(profuseMode?'Entre une dimension commune valide supérieure à 0.':'Entre des résolutions entières de 1 à 65 535 px pour les bandes.'); return;
   }
   let start=0, real=0, gaps=0, gapMillimeters=0, invalid=false, zones=[];
   let t=`<table><thead><tr><th>Écran</th><th>Start ${axis}</th><th>LED</th><th>Vide</th></tr></thead><tbody>`;
   rows.forEach((r,i)=>{
+    if(profuseMode){
+      const entered=parseNumber(r.querySelector('.zonevalue').value);
+      const crossInput=r.querySelector('.profuseZoneCross').value.trim();
+      const crossPixels=crossInput?parseNumber(crossInput):profuseCrossAxis;
+      const gapMm=parseNumber(r.querySelector('.gapmm').value);
+      const raw=measureMode?entered/pitch:entered;
+      const pixels=Math.round(raw),gapPx=Math.round(gapMm/pitch);
+      if(!['mm','px'].includes(mode)||(mode==='px'&&!Number.isInteger(entered))||!Number.isFinite(entered)||entered<=0||!Number.isInteger(crossPixels)||crossPixels<=0||!Number.isFinite(gapMm)||gapMm<0||!Number.isSafeInteger(pixels)||pixels<=0||!Number.isSafeInteger(gapPx)){
+        invalid=true;return;
+      }
+      const name=r.querySelector('.screenName').value.trim()||`Zone ${i+1}`;
+      const width=axis==='X'?pixels:crossPixels,height=axis==='X'?crossPixels:pixels;
+      r.querySelector('.converted').textContent=measureMode?`${formatInput(entered)} mm ÷ ${formatInput(pitch)} = ${formatInput(raw)} px → ${pixels} px`:'';
+      zones.push({index:i+1,name,pixels,start,crossPixels,width,height,
+        gapPx:i<rows.length-1?gapPx:0,gapMm:i<rows.length-1?gapMm:0,
+        groupId:r.dataset.groupId||'',groupName:r.dataset.groupName||'',
+        groupTargetAxis:Number(r.dataset.groupTargetAxis)||0,groupTargetCross:Number(r.dataset.groupTargetCross)||0,
+        bands:0,count20:0,count25:0,bandList:[],bandPixelError:0,horizontalBands:false});
+      real+=pixels;
+      if(i<rows.length-1){start+=pixels+gapPx;gaps+=gapPx;gapMillimeters+=gapMm}else start+=pixels;
+      return;
+    }
     updateBandPlacement(r);
     const entered=parseNumber(r.querySelector('.zonevalue').value);
     const customCross=r.querySelector('.profuseZoneCross').value.trim();
@@ -1373,17 +1421,18 @@ function calculate(){
     const mm=parseNumber(r.querySelector('.gapmm').value);
     const sendingCard=document.getElementById('multiSending').checked?Math.max(1,Math.round(parseNumber(r.querySelector('.sendingCard').value)||1)):1;
     const port=parseInt(r.querySelector('.rj45Port').value,10);
+    if(!Number.isInteger(sendingCard)||sendingCard<1||sendingCard>256||!Number.isInteger(port)||port<1||port>20||(mode==='px'&&!Number.isInteger(entered))){invalid=true;return;}
     const entrySide=r.querySelector('.entrySide').value;
     const controlLayout=profuseMode?'single-top':r.querySelector('.controlLayout').value;
     const horizontalBands=['single-left','single-right','dual-horizontal'].includes(controlLayout);
     const dualControl=controlLayout==='dual'||controlLayout==='dual-horizontal';
-    r.querySelector('.zoneLabel').textContent=horizontalBands?`Hauteur empilée des bandes — ${bandsMode?'nombre de bandes':measureMode?'mm':'px'}`:r.querySelector('.zoneLabel').textContent;
     const topHeight=profuseMode?profuseCrossAxis:dualControl?dualHeightPixels(r.querySelector('.heightTop').value,r.querySelector('.heightTopUnit').value,pitch):['single-top','single-left'].includes(controlLayout)?bandH:0;
     const bottomHeight=profuseMode?0:dualControl?dualHeightPixels(r.querySelector('.heightBottom').value,r.querySelector('.heightBottomUnit').value,pitch):['single-bottom','single-right'].includes(controlLayout)?bandH:0;
     for(const [side,pixels] of [['Top',topHeight],['Bottom',bottomHeight]]){
       r.querySelector('.height'+side+'Hint').textContent=dualControl&&r.querySelector('.height'+side+'Unit').value==='mm'&&Number.isFinite(pixels)?`${pixels} px calculés avec le pitch ${formatInput(pitch)} mm`:'';
     }
     const portBottom=dualControl?parseInt(r.querySelector('.rj45PortBottom').value,10):null;
+    if(dualControl&&(!Number.isInteger(portBottom)||portBottom<1||portBottom>20)){invalid=true;return;}
     const entrySideBottom=dualControl?r.querySelector('.entrySideBottom').value:null;
     r.querySelector('.dualTotal').textContent=dualControl&&Number.isFinite(topHeight)&&Number.isFinite(bottomHeight)?`${horizontalBands?'Largeur':'Hauteur'} totale : ${topHeight+bottomHeight} px`:'';
     let bandOrder=r.querySelector('.bandOrder').value;
@@ -1394,13 +1443,15 @@ function calculate(){
     let count25Left=bandOrder==='custom'?Math.max(0,Math.round(parseNumber(r.querySelector('.band25Left').value)||0)):0;
     let count25Right=bandOrder==='custom'?Math.max(0,Math.round(parseNumber(r.querySelector('.band25Right').value)||0)):0;
     const screenName=r.querySelector('.screenName').value.trim()||`Écran ${i+1}`;
+    if(bandsMode&&(!Number.isInteger(entered)||entered<0||!Number.isInteger(entered25)||entered25<0)){invalid=true;return;}
     const count20=bandsMode?Math.max(0,Math.round(Number.isFinite(entered)?entered:0)):null;
     const count25=bandsMode?Math.max(0,Math.round(Number.isFinite(entered25)?entered25:0)):null;
-    if((bandsMode?(count20+count25<=0):(!Number.isFinite(entered)||entered<=0))||!Number.isFinite(mm)||mm<0||(!profuseMode&&(!Number.isFinite(topHeight)||!Number.isFinite(bottomHeight)||(dualControl&&(topHeight<=0||bottomHeight<=0))))||(profuseMode&&(!Number.isInteger(crossPixels)||crossPixels<=0))){invalid=true;return}
+    if((bandsMode?(count20+count25<=0):(!Number.isFinite(entered)||entered<=0))||!Number.isFinite(mm)||mm<0||(!profuseMode&&(!Number.isInteger(topHeight)||!Number.isInteger(bottomHeight)||topHeight>65535||bottomHeight>65535||(dualControl&&(topHeight<=0||bottomHeight<=0))))||(profuseMode&&(!Number.isInteger(crossPixels)||crossPixels<=0))){invalid=true;return}
+    if(measureMode&&horizontalBands&&entered>65535*Math.max(200/bandW,250/bandW25)){invalid=true;return;}
     const measuredHorizontalMix=measureMode&&horizontalBands?inferBandMix(entered,200,250):null;
     const zoneRaw=measuredHorizontalMix?measuredHorizontalMix.count20*bandW+measuredHorizontalMix.count25*bandW25:measureMode?entered/pitch:bandsMode?(horizontalBands||axis==='X'?count20*bandW+count25*bandW25:(count20+count25)*bandH):entered;
     const z=Math.round(zoneRaw);
-    if(z<=0){invalid=true;return}
+    if(!Number.isSafeInteger(z)||z<=0||z>65535){invalid=true;return}
     let raw=mm/pitch, gp=Math.round(raw);
     const inferredMix=measuredHorizontalMix|| (profuseMode?{count20:1,count25:0}:horizontalBands||axis==='X'?inferBandMix(z,bandW,bandW25):{count20:Math.max(1,Math.round(z/bandH)),count25:0});
     const actual20=bandsMode?count20:inferredMix.count20;
@@ -1409,7 +1460,7 @@ function calculate(){
     if(horizontalBands&&axis==='Y'){const physicalStack=actual20*200+actual25*250;raw=physicalStack>0?mm*z/physicalStack:NaN;gp=Math.round(raw);}
     const bandCount=actual20+actual25;
     const bandList=profuseMode?[]:buildBandList(actual20,actual25,bandOrder,bandW,bandW25,bandH,horizontalBands?'X':axis,count25Left,count25Right);
-    const inferredBandPixels=profuseMode||(!horizontalBands&&axis!=='X')?z:Math.round(bandList.reduce((sum,b)=>sum+b.pixels,0));
+    const inferredBandPixels=Math.round(bandList.reduce((sum,b)=>sum+b.pixels,0));
     const inferenceError=inferredBandPixels-z;
     const mixLabel=bandList.map(b=>b.size).reduce((parts,size)=>{
       const last=parts.at(-1);if(last&&last.size===size)last.count++;else parts.push({size,count:1});return parts;
@@ -1428,7 +1479,7 @@ zones.push({index:i+1,name:screenName,groupId:r.dataset.groupId||'',groupName:r.
     if(i<rows.length-1){start+=progression+gp;gaps+=gp;gapMillimeters+=mm}else start+=progression;
   });
   if(invalid){
-    showCalculationError('Vérifie les mesures : zones et hauteurs doivent être supérieures à 0, et les vides ne peuvent pas être négatifs.'); return;
+    showCalculationError('Vérifie les dimensions, les vides et les ports. Les pixels et nombres de bandes doivent être entiers ; en mode complet, chaque résolution doit être comprise entre 1 et 65 535 px.'); return;
   }
   document.getElementById('calculationStatus').textContent='Calculs mis à jour automatiquement.';
   document.getElementById('calculationStatus').classList.remove('has-error');
@@ -1551,6 +1602,7 @@ function sectionBandRect(c,z,offset,pixels,length,sectionOffset){
 // Export expérimental du format DSCI / Complex Screen (.scr).
 function buildScrFile(calculation, sourceWidth, sourceHeight){
   const c=calculation, regions=[], chains=new Map();
+  if(c.axis==='Y'&&c.zones.some(z=>z.dualControl&&!z.horizontalBands))throw Error('Export non pris en charge : bandes verticales avec deux boîtiers sur l’axe Y. Utilise l’axe X pour cette configuration.');
   let physicalColumn=0;
   const add=(z,port,side,height,yOffset,gridOffset)=>{
     if(!height||!port)return;
@@ -1658,6 +1710,9 @@ function renderParameterTables(){
   }
   document.getElementById('profuseGroupAlerts').textContent='';
   setProfuseGroupFeedback([]);
+  if(c.axis==='Y'&&c.zones.some(z=>z.dualControl&&!z.horizontalBands)){
+    document.getElementById('novalctTable').innerHTML='<strong>Configuration non prise en charge pour la saisie NovaLCT : bandes verticales avec deux boîtiers sur l’axe Y. Utilise l’axe X pour cette configuration.</strong>';return;
+  }
   const counters=new Map(),result=[];
   const addSection=(z,port,side,height,yOffset,label)=>{
     if(!height||!port)return;
