@@ -1235,8 +1235,26 @@ function showCalculationError(message){
   document.getElementById('novalctTable').innerHTML='';
   document.getElementById('diagram').innerHTML='';
 }
-function updateAppMode(convertBands=true){
+function quickZoneDimensions(c,z){
+  return {width:z.width??(c.axis==='X'?z.pixels:z.bandWidthPx),
+    height:z.height??(c.axis==='X'?(z.totalHeight||c.bandH):z.pixels)};
+}
+function updateAppMode(convertBands=true,preserveGeometry=false){
   const profuse=document.getElementById('appMode').value==='profuse';
+  if(preserveGeometry&&profuse&&lastCalculation?.appMode==='complete'){
+    const c=lastCalculation;
+    const targetMode=document.getElementById('inputMode').value==='mm'?'mm':'px';
+    document.getElementById('inputMode').value=targetMode;
+    previousMode=targetMode;
+    document.body.classList.remove('bands-mode');
+    document.querySelectorAll('.row3').forEach((row,i)=>{
+      const zone=c.zones[i];if(!zone)return;
+      const size=quickZoneDimensions(c,zone);
+      const along=c.axis==='X'?size.width:size.height;
+      row.querySelector('.zonevalue').value=formatInput(targetMode==='mm'?along*c.pitch:along);
+      row.querySelector('.profuseZoneCross').value=String(c.axis==='X'?size.height:size.width);
+    });
+  }
   document.body.classList.toggle('profuse-mode',profuse);
   const bandOption=document.querySelector('#inputMode option[value="bands"]');
   bandOption.disabled=profuse;
@@ -1426,7 +1444,7 @@ zones.push({index:i+1,name:screenName,groupId:r.dataset.groupId||'',groupName:r.
     <div>Résolution logique sur l’axe ${axis} : <strong>${logical} px</strong></div>
     <div>${profuseMode?'Format du média':'Format du schéma'} : <strong>${screenWidth} × ${screenHeight} px</strong></div>`;
   document.getElementById('table').innerHTML=t;
-  lastCalculation={axis,pitch,real,gaps,logical,zones,bandW,bandW25,bandH,screenWidth,screenHeight,profuseCrossAxis};
+  lastCalculation={appMode:profuseMode?'profuse':'complete',axis,pitch,real,gaps,logical,zones,bandW,bandW25,bandH,screenWidth,screenHeight,profuseCrossAxis};
   renderParameterTables();
   renderDiagram();
 }
@@ -2016,7 +2034,7 @@ function downloadUrl(url,filename){
   const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
 }
 document.getElementById('pitch').addEventListener('input',calculate);
-document.getElementById('appMode').addEventListener('change',()=>updateAppMode());
+document.getElementById('appMode').addEventListener('change',()=>updateAppMode(true,true));
 document.getElementById('multiSending').addEventListener('change',()=>updateMultiSendingMode());
 document.getElementById('axis').addEventListener('change',()=>{updateProfuseDimensionLabels();calculate()});
 document.getElementById('inputMode').addEventListener('change',updateMode);
